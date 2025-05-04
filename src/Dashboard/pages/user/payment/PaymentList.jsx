@@ -1,35 +1,33 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Box,
-  Chip,
   Typography,
   Table,
   TableHead,
   TableBody,
   TableRow,
   TableCell,
-  TableContainer,
   Paper,
-  Button,
+  TableContainer,
+  Chip,
   CircularProgress,
+  IconButton,
+  Button,
   Pagination,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  IconButton,
   Grid,
-  Dialog,
-  DialogContent,
 } from "@mui/material";
-import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
-import FilterListIcon from "@mui/icons-material/FilterList";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import ReceiptIcon from "@mui/icons-material/Receipt";
+import EventIcon from "@mui/icons-material/Event";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
 
-// Import custom hook for client bookings
-import useClientBookings from "../../../../hooks/useClientBookings";
-import ChatInterface from "./ChatInterface";
+// Import custom hook for client payments
+import useClientPayments from "../../../../hooks/useClientPayments";
 
 // Format date helper function
 const formatDate = (dateString) => {
@@ -45,14 +43,15 @@ const formatDate = (dateString) => {
   }
 };
 
+// Status chip component
 const StatusChip = ({ status }) => {
   const getStatusColor = (status) => {
     switch (status) {
-      case "CONFIRMED":
+      case "COMPLETED":
         return "success";
       case "PENDING":
         return "warning";
-      case "CANCELLED":
+      case "FAILED":
         return "error";
       default:
         return "default";
@@ -62,68 +61,39 @@ const StatusChip = ({ status }) => {
   return <Chip label={status} color={getStatusColor(status)} size="small" />;
 };
 
-const PackageChip = ({ category }) => {
-  if (!category) return null;
-
-  const getPackageColor = (category) => {
-    const type = category.toLowerCase();
-    switch (type) {
-      case "platinum":
-        return "#1a237e"; // Dark blue
-      case "gold":
-      case "golden":
-        return "#ff9800"; // Gold
-      case "silver":
-        return "#757575"; // Silver
-      case "bronze":
-        return "#cd7f32"; // Bronze
-      default:
-        return "#000000";
-    }
+// Payment method chip component
+const PaymentMethodChip = ({ method }) => {
+  // Format the payment method for display
+  const formatMethod = (method) => {
+    if (method === "NOT_SELECTED") return "Not Selected";
+    return method.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   return (
-    <Typography
-      style={{
-        color: getPackageColor(category),
-        fontWeight: "bold",
-      }}
-    >
-      {category.charAt(0).toUpperCase() + category.slice(1)}
-    </Typography>
-  );
-};
-
-const ChatButton = ({ vendorId, unreadCount = 0, onChatOpen }) => {
-  return (
-    <Button
-      color="primary"
+    <Chip
+      icon={<CreditCardIcon />}
+      label={formatMethod(method)}
       variant="outlined"
       size="small"
-      onClick={() => onChatOpen(vendorId)}
-      startIcon={<ChatBubbleOutlineIcon />}
-    >
-      {unreadCount > 0 ? `Chat (${unreadCount})` : "Chat"}
-    </Button>
+    />
   );
 };
 
-const MyBookingsList = () => {
-  // Use the custom hook to fetch and manage bookings
+const PaymentList = () => {
+  // Use the custom hook to fetch payments
   const {
-    bookings,
+    payments,
     pagination,
     loading,
     error,
     changePage,
     changeLimit,
+    filterPayments,
     refetch,
-  } = useClientBookings();
+  } = useClientPayments();
 
   const [showFilters, setShowFilters] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [chatDialogOpen, setChatDialogOpen] = useState(false);
-  const [selectedVendorId, setSelectedVendorId] = useState(null);
 
   const handlePageChange = (event, page) => {
     changePage(page);
@@ -135,20 +105,11 @@ const MyBookingsList = () => {
 
   const handleStatusFilterChange = (event) => {
     setStatusFilter(event.target.value);
-    // Add more sophisticated filtering when backend supports it
+    // Implement actual API filtering when backend supports it
   };
 
   const toggleFilters = () => {
     setShowFilters(!showFilters);
-  };
-
-  const handleChatOpen = (vendorId) => {
-    setSelectedVendorId(vendorId);
-    setChatDialogOpen(true);
-  };
-
-  const handleChatClose = () => {
-    setChatDialogOpen(false);
   };
 
   if (loading) {
@@ -187,7 +148,7 @@ const MyBookingsList = () => {
         alignItems="center"
         mb={2}
       >
-        <Typography variant="h5">My Bookings</Typography>
+        <Typography variant="h5">Payment History</Typography>
         <Box>
           <IconButton onClick={toggleFilters} color="primary" title="Filter">
             <FilterListIcon />
@@ -212,8 +173,8 @@ const MyBookingsList = () => {
                 >
                   <MenuItem value="all">All</MenuItem>
                   <MenuItem value="PENDING">Pending</MenuItem>
-                  <MenuItem value="CONFIRMED">Confirmed</MenuItem>
-                  <MenuItem value="CANCELLED">Cancelled</MenuItem>
+                  <MenuItem value="COMPLETED">Completed</MenuItem>
+                  <MenuItem value="FAILED">Failed</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -225,47 +186,55 @@ const MyBookingsList = () => {
         <Table>
           <TableHead>
             <TableRow>
+              <TableCell>Payment ID</TableCell>
               <TableCell>Service</TableCell>
               <TableCell>Vendor</TableCell>
-              <TableCell>Package</TableCell>
+              <TableCell>Amount</TableCell>
+              <TableCell>Payment Method</TableCell>
               <TableCell>Event Date</TableCell>
-              <TableCell>Location</TableCell>
-              <TableCell>Price</TableCell>
+              <TableCell>Payment Date</TableCell>
               <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {bookings.length === 0 ? (
+            {payments.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} align="center">
                   <Typography variant="body1" color="textSecondary" p={3}>
-                    No bookings found
+                    No payment records found
                   </Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              bookings.map((booking) => (
-                <TableRow key={booking.id}>
-                  <TableCell>{booking.service.name}</TableCell>
-                  <TableCell>{booking.vendor.businessName}</TableCell>
+              payments.map((payment) => (
+                <TableRow key={payment.id}>
                   <TableCell>
-                    <PackageChip category={booking.service.category} />
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <ReceiptIcon fontSize="small" color="action" />
+                      {payment.id.substring(0, 8)}...
+                    </Box>
                   </TableCell>
-                  <TableCell>{formatDate(booking.eventDate)}</TableCell>
-                  <TableCell>{booking.location}</TableCell>
+                  <TableCell>{payment.booking.service.name}</TableCell>
                   <TableCell>
-                    ETB {booking.service.price.toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    <StatusChip status={booking.status} />
+                    {payment.booking.service.vendor.businessName}
                   </TableCell>
                   <TableCell>
-                    <ChatButton
-                      vendorId={booking.vendor.userId || booking.vendor.id}
-                      unreadCount={0}
-                      onChatOpen={handleChatOpen}
-                    />
+                    <Typography fontWeight="bold">
+                      ETB {payment.amount.toLocaleString()}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <PaymentMethodChip method={payment.method} />
+                  </TableCell>
+                  <TableCell>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <EventIcon fontSize="small" color="primary" />
+                      {formatDate(payment.booking.eventDate)}
+                    </Box>
+                  </TableCell>
+                  <TableCell>{formatDate(payment.createdAt)}</TableCell>
+                  <TableCell>
+                    <StatusChip status={payment.status} />
                   </TableCell>
                 </TableRow>
               ))
@@ -274,30 +243,38 @@ const MyBookingsList = () => {
         </Table>
       </TableContainer>
 
-      {pagination.totalPages > 1 && (
-        <Box mt={2} display="flex" justifyContent="center">
+      {pagination.pages > 1 && (
+        <Box
+          mt={2}
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <FormControl sx={{ minWidth: 120 }} size="small">
+            <InputLabel id="limit-select-label">Items per page</InputLabel>
+            <Select
+              labelId="limit-select-label"
+              value={pagination.limit}
+              label="Items per page"
+              onChange={handleLimitChange}
+            >
+              <MenuItem value={5}>5</MenuItem>
+              <MenuItem value={10}>10</MenuItem>
+              <MenuItem value={25}>25</MenuItem>
+              <MenuItem value={50}>50</MenuItem>
+            </Select>
+          </FormControl>
+
           <Pagination
-            count={pagination.totalPages}
+            count={pagination.pages}
             page={pagination.page}
             onChange={handlePageChange}
             color="primary"
           />
         </Box>
       )}
-
-      {/* Chat Dialog */}
-      <Dialog
-        open={chatDialogOpen}
-        onClose={handleChatClose}
-        fullWidth
-        maxWidth="md"
-      >
-        <DialogContent sx={{ p: 0 }}>
-          <ChatInterface vendorId={selectedVendorId} onBack={handleChatClose} />
-        </DialogContent>
-      </Dialog>
     </Box>
   );
 };
 
-export default MyBookingsList;
+export default PaymentList;

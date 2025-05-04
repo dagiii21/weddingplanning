@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { styled } from '@mui/material/styles';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { styled } from "@mui/material/styles";
 import {
   Box,
   Grid,
@@ -18,28 +18,31 @@ import {
   Button,
   Avatar,
   CircularProgress,
-  Chip
-} from '@mui/material';
+  Chip,
+} from "@mui/material";
+
+// Import custom hook for client dashboard data
+import useClientDashboard from "../../../hooks/useClientDashboard";
 
 // Icons
-import HomeIcon from '@mui/icons-material/Home';
-import EventIcon from '@mui/icons-material/Event';
-import PaymentIcon from '@mui/icons-material/Payment';
-import TaskIcon from '@mui/icons-material/Task';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import BookOnlineIcon from '@mui/icons-material/BookOnline';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ReceiptIcon from '@mui/icons-material/Receipt';
+import HomeIcon from "@mui/icons-material/Home";
+import EventIcon from "@mui/icons-material/Event";
+import PaymentIcon from "@mui/icons-material/Payment";
+import TaskIcon from "@mui/icons-material/Task";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import BookOnlineIcon from "@mui/icons-material/BookOnline";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ReceiptIcon from "@mui/icons-material/Receipt";
 
 // Styled components
 const StyledCard = styled(Card)(({ theme }) => ({
-  height: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  transition: 'transform 0.3s, box-shadow 0.3s',
-  '&:hover': {
-    transform: 'translateY(-5px)',
+  height: "100%",
+  display: "flex",
+  flexDirection: "column",
+  transition: "transform 0.3s, box-shadow 0.3s",
+  "&:hover": {
+    transform: "translateY(-5px)",
     boxShadow: theme.shadows[8],
   },
 }));
@@ -50,111 +53,104 @@ const MetricCard = styled(StyledCard)(({ theme }) => ({
 }));
 
 const DashboardHeader = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
   marginBottom: theme.spacing(4),
-  [theme.breakpoints.down('sm')]: {
-    flexDirection: 'column',
-    alignItems: 'flex-start',
+  [theme.breakpoints.down("sm")]: {
+    flexDirection: "column",
+    alignItems: "flex-start",
     gap: theme.spacing(2),
   },
 }));
 
-// Mock data for user dashboard
-const getMockMetrics = () => {
-  return {
-    totalSpent: {
-      total: '$2,480',
-      lastMonth: '$580'
-    },
-    activeBookings: {
-      total: 3,
-      pending: 1
-    },
-    upcomingEvents: {
-      total: 2,
-      nextDate: '2024-03-15'
-    }
-  };
+// Get user name from local storage or use default
+const getUserName = () => {
+  return localStorage.getItem("userName") || "Guest User";
 };
 
-// Mock data for transactions
-const getMockTransactions = () => {
-  return [
-    {
-      id: 1,
-      service: 'Wedding Photography',
-      amount: '$800',
-      date: '2024-02-10',
-      status: 'Completed',
-      vendor: 'John Photography'
-    },
-    {
-      id: 2,
-      service: 'Catering Service',
-      amount: '$1,200',
-      date: '2024-02-05',
-      status: 'Pending',
-      vendor: 'Gourmet Caterers'
-    },
-    {
-      id: 3,
-      service: 'Venue Booking',
-      amount: '$2,500',
-      date: '2024-01-28',
-      status: 'Completed',
-      vendor: 'Royal Gardens'
-    },
-    {
-      id: 4,
-      service: 'DJ Services',
-      amount: '$400',
-      date: '2024-01-15',
-      status: 'Completed',
-      vendor: 'Party Mix DJs'
-    }
-  ];
-};
-
-// Mock data for upcoming events
-const getMockUpcomingEvents = () => {
-  return [
-    {
-      id: 1,
-      title: 'Wedding Photography Session',
-      date: '2024-03-15',
-      vendor: 'John Photography',
-      status: 'Confirmed'
-    },
-    {
-      id: 2,
-      title: 'Catering Tasting Session',
-      date: '2024-03-01',
-      vendor: 'Gourmet Caterers',
-      status: 'Pending'
-    }
-  ];
+// Format date helper function
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  try {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch (e) {
+    return dateString;
+  }
 };
 
 const UserDashboard = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState(null);
-  const [transactions, setTransactions] = useState([]);
-  const [upcomingEvents, setUpcomingEvents] = useState([]);
-  const [userName, setUserName] = useState('John Smith');
+  const [userName, setUserName] = useState("Guest User");
 
-  // Simulate data loading
+  // Use the custom hook to fetch dashboard data
+  const { dashboardData, loading, error, refetch } = useClientDashboard();
+
+  // Extract relevant data from the dashboard data
+  const metrics = {
+    totalSpent: {
+      total: `ETB ${dashboardData.totalPaymentAmount.toLocaleString()}`,
+      lastMonth:
+        dashboardData.payments.length > 0
+          ? `ETB ${dashboardData.payments[0].amount.toLocaleString()}`
+          : "ETB 0",
+    },
+    activeBookings: {
+      total:
+        dashboardData.bookings.confirmed.count +
+        dashboardData.bookings.pending.count,
+      pending: dashboardData.bookings.pending.count,
+    },
+    upcomingEvents: {
+      total:
+        dashboardData.bookings.confirmed.count +
+        dashboardData.bookings.pending.count,
+      nextDate:
+        dashboardData.bookings.pending.data.length > 0
+          ? dashboardData.bookings.pending.data[0]?.eventDate ||
+            dashboardData.bookings.confirmed.data.length > 0
+            ? dashboardData.bookings.confirmed.data[0]?.eventDate
+            : "No upcoming events"
+          : "No upcoming events",
+    },
+  };
+
+  const transactions = dashboardData.payments.map((payment) => ({
+    id: payment.id,
+    service: payment.service,
+    amount: `ETB ${payment.amount.toLocaleString()}`,
+    date: formatDate(payment.createdAt),
+    status: payment.status,
+    vendor: payment.vendor,
+  }));
+
+  // Combine pending and confirmed bookings for upcoming events
+  const upcomingEvents = [
+    ...dashboardData.bookings.confirmed.data.map((booking) => ({
+      id: booking.id,
+      title: booking.serviceName,
+      date: booking.eventDate,
+      vendor: booking.vendorName,
+      location: booking.location,
+      status: "Confirmed",
+    })),
+    ...dashboardData.bookings.pending.data.map((booking) => ({
+      id: booking.id,
+      title: booking.serviceName,
+      date: booking.eventDate,
+      vendor: booking.vendorName,
+      location: booking.location,
+      status: "Pending",
+    })),
+  ];
+
+  // Load user name
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMetrics(getMockMetrics());
-      setTransactions(getMockTransactions());
-      setUpcomingEvents(getMockUpcomingEvents());
-      setLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
+    setUserName(getUserName());
   }, []);
 
   const HomeButton = () => {
@@ -162,7 +158,7 @@ const UserDashboard = () => {
       <Button
         variant="text"
         startIcon={<HomeIcon />}
-        onClick={() => navigate('/')}
+        onClick={() => navigate("/")}
         sx={{ marginBottom: 2 }}
       >
         Home
@@ -172,8 +168,29 @@ const UserDashboard = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box p={3}>
+        <HomeButton />
+        <Typography variant="h6" color="error" align="center">
+          {error}
+        </Typography>
+        <Box display="flex" justifyContent="center" mt={2}>
+          <Button variant="contained" onClick={refetch}>
+            Retry
+          </Button>
+        </Box>
       </Box>
     );
   }
@@ -181,7 +198,7 @@ const UserDashboard = () => {
   return (
     <Box p={3}>
       <HomeButton />
-      
+
       <DashboardHeader>
         <Box>
           <Typography variant="h4" fontWeight="bold" gutterBottom>
@@ -198,11 +215,15 @@ const UserDashboard = () => {
         <Grid item xs={12} sm={6} lg={4}>
           <MetricCard>
             <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+              >
                 <Typography color="text.secondary" gutterBottom>
                   Total Spent
                 </Typography>
-                <Avatar sx={{ bgcolor: 'success.main' }}>
+                <Avatar sx={{ bgcolor: "success.main" }}>
                   <AttachMoneyIcon />
                 </Avatar>
               </Box>
@@ -210,7 +231,7 @@ const UserDashboard = () => {
                 {metrics.totalSpent.total}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Last Month: {metrics.totalSpent.lastMonth}
+                Most Recent: {metrics.totalSpent.lastMonth}
               </Typography>
             </CardContent>
           </MetricCard>
@@ -218,11 +239,15 @@ const UserDashboard = () => {
         <Grid item xs={12} sm={6} lg={4}>
           <MetricCard>
             <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+              >
                 <Typography color="text.secondary" gutterBottom>
                   Active Bookings
                 </Typography>
-                <Avatar sx={{ bgcolor: 'primary.main' }}>
+                <Avatar sx={{ bgcolor: "primary.main" }}>
                   <BookOnlineIcon />
                 </Avatar>
               </Box>
@@ -238,11 +263,15 @@ const UserDashboard = () => {
         <Grid item xs={12} sm={6} lg={4}>
           <MetricCard>
             <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+              >
                 <Typography color="text.secondary" gutterBottom>
                   Upcoming Events
                 </Typography>
-                <Avatar sx={{ bgcolor: 'warning.main' }}>
+                <Avatar sx={{ bgcolor: "warning.main" }}>
                   <EventIcon />
                 </Avatar>
               </Box>
@@ -250,7 +279,10 @@ const UserDashboard = () => {
                 {metrics.upcomingEvents.total}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Next Event: {new Date(metrics.upcomingEvents.nextDate).toLocaleDateString()}
+                Next Event:{" "}
+                {typeof metrics.upcomingEvents.nextDate === "string"
+                  ? metrics.upcomingEvents.nextDate
+                  : formatDate(metrics.upcomingEvents.nextDate)}
               </Typography>
             </CardContent>
           </MetricCard>
@@ -261,8 +293,8 @@ const UserDashboard = () => {
       <Grid container spacing={3}>
         <Grid item xs={12} md={7}>
           <StyledCard>
-            <CardHeader 
-              title="Payment Transaction History" 
+            <CardHeader
+              title="Payment Transaction History"
               action={
                 <IconButton aria-label="settings">
                   <MoreVertIcon />
@@ -271,43 +303,65 @@ const UserDashboard = () => {
             />
             <Divider />
             <CardContent sx={{ flexGrow: 1 }}>
-              <List>
-                {transactions.map((transaction) => (
-                  <ListItem key={transaction.id} divider>
-                    <ListItemIcon>
-                      <ReceiptIcon color={transaction.status === 'Completed' ? 'success' : 'warning'} />
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary={transaction.service}
-                      secondary={
-                        <React.Fragment>
-                          <Typography component="span" variant="body2" color="text.primary">
-                            {transaction.vendor}
-                          </Typography>
-                          {` • ${transaction.date}`}
-                        </React.Fragment>
-                      }
-                    />
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Chip 
-                        label={transaction.status} 
-                        size="small"
-                        color={transaction.status === 'Completed' ? 'success' : 'warning'}
+              {transactions.length > 0 ? (
+                <List>
+                  {transactions.map((transaction) => (
+                    <ListItem key={transaction.id} divider>
+                      <ListItemIcon>
+                        <ReceiptIcon
+                          color={
+                            transaction.status === "COMPLETED"
+                              ? "success"
+                              : "warning"
+                          }
+                        />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={transaction.service}
+                        secondary={
+                          <React.Fragment>
+                            <Typography
+                              component="span"
+                              variant="body2"
+                              color="text.primary"
+                            >
+                              {transaction.vendor}
+                            </Typography>
+                            {` • ${transaction.date}`}
+                          </React.Fragment>
+                        }
                       />
-                      <Typography variant="subtitle1" fontWeight="bold">
-                        {transaction.amount}
-                      </Typography>
-                    </Box>
-                  </ListItem>
-                ))}
-              </List>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Chip
+                          label={transaction.status}
+                          size="small"
+                          color={
+                            transaction.status === "COMPLETED"
+                              ? "success"
+                              : "warning"
+                          }
+                        />
+                        <Typography variant="subtitle1" fontWeight="bold">
+                          {transaction.amount}
+                        </Typography>
+                      </Box>
+                    </ListItem>
+                  ))}
+                </List>
+              ) : (
+                <Box p={3} textAlign="center">
+                  <Typography variant="body1" color="text.secondary">
+                    No payment transactions yet
+                  </Typography>
+                </Box>
+              )}
             </CardContent>
           </StyledCard>
         </Grid>
         <Grid item xs={12} md={5}>
           <StyledCard>
-            <CardHeader 
-              title="Upcoming Events" 
+            <CardHeader
+              title="Upcoming Events"
               action={
                 <IconButton aria-label="settings">
                   <MoreVertIcon />
@@ -316,37 +370,57 @@ const UserDashboard = () => {
             />
             <Divider />
             <CardContent sx={{ flexGrow: 1 }}>
-              <List>
-                {upcomingEvents.map((event) => (
-                  <ListItem key={event.id} divider>
-                    <ListItemIcon>
-                      <EventIcon color={event.status === 'Confirmed' ? 'success' : 'warning'} />
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary={event.title}
-                      secondary={
-                        <React.Fragment>
-                          <Typography component="span" variant="body2" color="text.primary">
-                            {event.vendor}
-                          </Typography>
-                          {` • ${new Date(event.date).toLocaleDateString()}`}
-                        </React.Fragment>
-                      }
-                    />
-                    <Chip 
-                      label={event.status} 
-                      size="small"
-                      color={event.status === 'Confirmed' ? 'success' : 'warning'}
-                    />
-                  </ListItem>
-                ))}
-              </List>
+              {upcomingEvents.length > 0 ? (
+                <List>
+                  {upcomingEvents.map((event) => (
+                    <ListItem key={event.id} divider>
+                      <ListItemIcon>
+                        <EventIcon
+                          color={
+                            event.status === "Confirmed" ? "success" : "warning"
+                          }
+                        />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={event.title}
+                        secondary={
+                          <React.Fragment>
+                            <Typography
+                              component="span"
+                              variant="body2"
+                              color="text.primary"
+                            >
+                              {event.vendor}
+                            </Typography>
+                            {` • ${formatDate(event.date)}`}
+                            <br />
+                            {`Location: ${event.location || "Not specified"}`}
+                          </React.Fragment>
+                        }
+                      />
+                      <Chip
+                        label={event.status}
+                        size="small"
+                        color={
+                          event.status === "Confirmed" ? "success" : "warning"
+                        }
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              ) : (
+                <Box p={3} textAlign="center">
+                  <Typography variant="body1" color="text.secondary">
+                    No upcoming events
+                  </Typography>
+                </Box>
+              )}
             </CardContent>
             <Box p={2} display="flex" justifyContent="center">
-              <Button 
-                variant="text" 
-                color="primary" 
-                onClick={() => navigate('/my-bookings')}
+              <Button
+                variant="text"
+                color="primary"
+                onClick={() => navigate("/my-bookings")}
                 startIcon={<BookOnlineIcon />}
               >
                 View All Bookings

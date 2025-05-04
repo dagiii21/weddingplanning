@@ -12,6 +12,7 @@ import {
   email as emailValidator,
   FormTab,
   TabbedForm,
+  LoadingIndicator,
 } from "react-admin";
 import {
   Card,
@@ -22,6 +23,8 @@ import {
   Box,
   Tab,
   Tabs,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import { clientService } from "../../../../services/api";
 
@@ -68,25 +71,47 @@ const AccountEdit = () => {
   const redirect = useRedirect();
   const { identity, isLoading: identityLoading } = useGetIdentity();
   const [loading, setLoading] = useState(false);
-  const [userData, setUserData] = useState({
+  const [fetchLoading, setFetchLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
+  const [profileData, setProfileData] = useState({
+    id: "",
     email: "",
     firstName: "",
     lastName: "",
     phone: "",
+    avatar: null,
   });
 
+  // Fetch user profile data from the API
   useEffect(() => {
-    if (identity) {
-      // In a real app, you would fetch the user details from the API
-      // For now, using the identity data as a placeholder
-      setUserData({
-        email: identity.email || "",
-        firstName: identity.firstName || "",
-        lastName: identity.lastName || "",
-        phone: identity.phone || "",
-      });
-    }
-  }, [identity]);
+    const fetchUserProfile = async () => {
+      setFetchLoading(true);
+      try {
+        const response = await clientService.getProfile();
+        const { profile } = response.data;
+
+        // Update profile data with real values from the API
+        setProfileData({
+          id: profile.id || "",
+          email: profile.email || "",
+          firstName: profile.firstName || "",
+          lastName: profile.lastName || "",
+          phone: profile.phone || "",
+          avatar: profile.avatar,
+        });
+
+        setFetchError(null);
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+        setFetchError("Failed to load your profile. Please try again later.");
+        notify("Error loading profile data", { type: "error" });
+      } finally {
+        setFetchLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, [notify]);
 
   const handleSubmit = async (values) => {
     setLoading(true);
@@ -107,7 +132,7 @@ const AccountEdit = () => {
       }
 
       // Send update request to the API
-      const userId = identity?.id;
+      const userId = profileData.id;
       if (!userId) {
         throw new Error("User ID not found");
       }
@@ -116,8 +141,16 @@ const AccountEdit = () => {
 
       notify("Account updated successfully", { type: "success" });
 
-      // Update local session storage or context with new user data if needed
-      // For example: localStorage.setItem('user', JSON.stringify(response.data.user));
+      // Refresh the profile data
+      const profileResponse = await clientService.getProfile();
+      setProfileData({
+        id: profileResponse.data.profile.id || "",
+        email: profileResponse.data.profile.email || "",
+        firstName: profileResponse.data.profile.firstName || "",
+        lastName: profileResponse.data.profile.lastName || "",
+        phone: profileResponse.data.profile.phone || "",
+        avatar: profileResponse.data.profile.avatar,
+      });
     } catch (error) {
       console.error("Error updating account:", error);
       notify(`Error updating account: ${error.message || "Unknown error"}`, {
@@ -128,16 +161,36 @@ const AccountEdit = () => {
     }
   };
 
-  if (identityLoading) {
-    return <div>Loading...</div>;
+  if (fetchLoading) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="400px"
+      >
+        <CircularProgress />
+        <Typography variant="body1" ml={2}>
+          Loading your profile...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <Box p={3}>
+        <Alert severity="error">{fetchError}</Alert>
+      </Box>
+    );
   }
 
   const initialValues = {
-    userId: identity?.id || "",
-    email: userData.email || "",
-    firstName: userData.firstName || "",
-    lastName: userData.lastName || "",
-    phone: userData.phone || "",
+    userId: profileData.id,
+    email: profileData.email,
+    firstName: profileData.firstName,
+    lastName: profileData.lastName,
+    phone: profileData.phone || "",
     password: "",
     confirmPassword: "",
   };
@@ -169,10 +222,20 @@ const AccountEdit = () => {
                       source="firstName"
                       label="First Name"
                       fullWidth
+                      helperText={`Current: ${
+                        profileData.firstName || "Not set"
+                      }`}
                     />
                   </Grid>
                   <Grid item xs={12} md={6}>
-                    <TextInput source="lastName" label="Last Name" fullWidth />
+                    <TextInput
+                      source="lastName"
+                      label="Last Name"
+                      fullWidth
+                      helperText={`Current: ${
+                        profileData.lastName || "Not set"
+                      }`}
+                    />
                   </Grid>
                   <Grid item xs={12}>
                     <TextInput
@@ -181,6 +244,7 @@ const AccountEdit = () => {
                       label="Email Address"
                       fullWidth
                       validate={[emailValidator()]}
+                      helperText={`Current: ${profileData.email || "Not set"}`}
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -189,6 +253,7 @@ const AccountEdit = () => {
                       label="Phone Number"
                       fullWidth
                       validate={[validatePhone]}
+                      helperText={`Current: ${profileData.phone || "Not set"}`}
                     />
                   </Grid>
                 </Grid>
