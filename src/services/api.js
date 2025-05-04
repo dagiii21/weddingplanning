@@ -188,4 +188,41 @@ export const clientService = {
     api.post(ENDPOINTS.CLIENT.START_CONVERSATION, data),
 };
 
+export const adminService = {
+  // Dashboard Overview
+  getOverview: () => api.get('/admin/dashboard/overview'),
+
+  // Event Planners
+  getEventPlanners: (params) => api.get('/admin/event-planners', { params }),
+  getEventPlanner: (id) => api.get(`/admin/event-planners/${id}`),
+  createEventPlanner: (data) => api.post('/admin/event-planners', data),
+  updateEventPlanner: (id, data) => api.patch(`/admin/event-planners/${id}`, data),
+  deleteEventPlanner: (id) => api.delete(`/admin/event-planners/${id}`),
+
+  // Users (Clients)
+  getClients: (params) => api.get('/admin/clients', { params }),
+  getClient: (id) => api.get(`/admin/clients/${id}`),
+  createClient: (data) => api.post('/admin/clients', data),
+  updateClient: (id, data) => api.put(`/admin/clients/${id}`, data),
+  deleteClient: (id) => api.delete(`/admin/clients/${id}`),
+  changeClientPassword: (id, password) => api.patch(`/admin/clients/${id}/password`, { password }),
+
+  // Vendors
+  getVendors: (params) => api.get('/admin/vendors', { params }),
+  getVendor: (id) => api.get(`/admin/vendors/${id}`),
+  updateVendor: (id, data) => api.patch(`/admin/vendors/${id}`, data),
+  deleteVendor: (id) => api.delete(`/admin/vendors/${id}`),
+  approveVendor: (id) => api.patch(`/admin/vendors/${id}/approve`),
+  suspendVendor: (id) => api.patch(`/admin/vendors/${id}/suspend`),
+
+  // Payments
+  getPayments: (params) => api.get('/admin/payments', { params }),
+  getPayment: (id) => api.get(`/admin/payments/${id}`),
+
+  // Feedback
+  getFeedbacks: (params) => api.get('/admin/feedback', { params }),
+  getFeedback: (id) => api.get(`/admin/feedback/${id}`),
+
+};
+
 export default api;
