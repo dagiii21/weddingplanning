@@ -1,7 +1,6 @@
-
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { styled } from '@mui/material/styles';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { styled } from "@mui/material/styles";
 import {
   Box,
   Grid,
@@ -18,33 +17,39 @@ import {
   ListItemIcon,
   Button,
   Avatar,
-  CircularProgress
-} from '@mui/material';
+  CircularProgress,
+  Badge,
+} from "@mui/material";
 
 // Icons
-import HomeIcon from '@mui/icons-material/Home';
-import EventIcon from '@mui/icons-material/Event';
-import SettingsIcon from '@mui/icons-material/Settings';
-import TaskIcon from '@mui/icons-material/Task';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import StarIcon from '@mui/icons-material/Star';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import HomeIcon from "@mui/icons-material/Home";
+import EventIcon from "@mui/icons-material/Event";
+import SettingsIcon from "@mui/icons-material/Settings";
+import TaskIcon from "@mui/icons-material/Task";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import BusinessCenterIcon from "@mui/icons-material/BusinessCenter";
+import NotificationsIcon from "@mui/icons-material/Notifications";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import StarIcon from "@mui/icons-material/Star";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
+
+// Custom hook for vendor dashboard
+import useVendorDashboard from "../../../hooks/useVendorDashboard";
+import useVendorChat from "../../../hooks/useVendorChat";
 
 // Styled components
 const StyledCard = styled(Card)(({ theme }) => ({
-  height: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  transition: 'transform 0.3s, box-shadow 0.3s',
-  '&:hover': {
-    transform: 'translateY(-5px)',
+  height: "100%",
+  display: "flex",
+  flexDirection: "column",
+  transition: "transform 0.3s, box-shadow 0.3s",
+  "&:hover": {
+    transform: "translateY(-5px)",
     boxShadow: theme.shadows[8],
   },
 }));
@@ -55,81 +60,44 @@ const MetricCard = styled(StyledCard)(({ theme }) => ({
 }));
 
 const DashboardHeader = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
   marginBottom: theme.spacing(4),
-  [theme.breakpoints.down('sm')]: {
-    flexDirection: 'column',
-    alignItems: 'flex-start',
+  [theme.breakpoints.down("sm")]: {
+    flexDirection: "column",
+    alignItems: "flex-start",
     gap: theme.spacing(2),
   },
 }));
 
 const QuickActionButton = styled(Button)(({ theme }) => ({
   margin: theme.spacing(1),
-  textTransform: 'none',
+  textTransform: "none",
 }));
-
-// Mock data functions - in a real app these would fetch from API
-const getMockMetrics = () => {
-  return {
-    bookings: {
-      total: 48,
-      change: 12.5,
-      increasing: true
-    },
-    revenue: {
-      total: '$24,680',
-      change: 8.3,
-      increasing: true
-    },
-    rating: {
-      total: '4.8',
-      change: 0.2,
-      increasing: true
-    },
-    inquiries: {
-      total: 15,
-      change: -2.1,
-      increasing: false
-    }
-  };
-};
-
-const getMockUpcomingEvents = () => {
-  return [
-    { id: 1, title: 'Johnson Wedding', date: '2023-08-15', status: 'Confirmed' },
-    { id: 2, title: 'Corporate Gala', date: '2023-08-18', status: 'Pending' },
-    { id: 3, title: 'Smith Anniversary', date: '2023-08-21', status: 'Confirmed' },
-    { id: 4, title: 'Charity Fundraiser', date: '2023-08-25', status: 'Pending' },
-  ];
-};
 
 const VendorDashboard = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState(null);
-  const [upcomingEvents, setUpcomingEvents] = useState([]);
-  const [vendorName, setVendorName] = useState('Elegant Events Co.');
+  const { dashboardData, loading, error, refetch } = useVendorDashboard();
+  const { getTotalUnreadCount, fetchConversations } = useVendorChat();
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
-  // Simulate data loading
+  // Fetch chat data
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMetrics(getMockMetrics());
-      setUpcomingEvents(getMockUpcomingEvents());
-      setLoading(false);
-    }, 1000);
+    const loadChatData = async () => {
+      await fetchConversations();
+      setUnreadMessages(getTotalUnreadCount());
+    };
 
-    return () => clearTimeout(timer);
-  }, []);
+    loadChatData();
+  }, [fetchConversations, getTotalUnreadCount]);
 
   const HomeButton = () => {
     return (
       <Button
         variant="text"
         startIcon={<HomeIcon />}
-        onClick={() => navigate('/')}
+        onClick={() => navigate("/")}
         sx={{ marginBottom: 2 }}
       >
         Home
@@ -139,189 +107,181 @@ const VendorDashboard = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
         <CircularProgress />
       </Box>
     );
   }
 
+  if (error) {
+    return (
+      <Box p={3}>
+        <HomeButton />
+        <Typography variant="h6" color="error" align="center">
+          {error}
+        </Typography>
+        <Box display="flex" justifyContent="center" mt={2}>
+          <Button variant="contained" onClick={refetch}>
+            Retry
+          </Button>
+        </Box>
+      </Box>
+    );
+  }
+
+  // Create booking events from confirmed bookings
+  const upcomingEvents =
+    dashboardData.confirmedBookings?.data?.map((booking) => ({
+      id: booking.id,
+      title: booking.serviceName || "Service Booking",
+      date: booking.eventDate,
+      status: "Confirmed",
+    })) || [];
+
   return (
     <Box p={3}>
       <HomeButton />
-      
+
       <DashboardHeader>
         <Box>
           <Typography variant="h4" fontWeight="bold" gutterBottom>
             Vendor Dashboard
           </Typography>
           <Typography variant="subtitle1" color="text.secondary">
-            Welcome back, {vendorName}
+            Welcome back, {dashboardData.businessName || "Vendor"}
           </Typography>
         </Box>
-        
-        {/* <Box>
-          <IconButton>
-            <NotificationsIcon />
-          </IconButton>
-          <IconButton>
-            <SettingsIcon />
-          </IconButton>
-        </Box> */}
       </DashboardHeader>
 
-      {/* Quick action buttons */}
-      {/* <Box mb={4} display="flex" flexWrap="wrap">
-        <QuickActionButton variant="contained" color="primary" startIcon={<EventIcon />}>
-          Add New Service
-        </QuickActionButton>
-        <QuickActionButton variant="contained" color="secondary" startIcon={<AssignmentIcon />}>
-          Manage Bookings
-        </QuickActionButton>
-        <QuickActionButton variant="contained" color="info" startIcon={<BusinessCenterIcon />}>
-          Update Profile
-        </QuickActionButton>
-        <QuickActionButton variant="outlined" startIcon={<CalendarMonthIcon />}>
-          View Calendar
-        </QuickActionButton>
-      </Box> */}
-
-      {/* Metrics Grid */}
-      <Typography variant="h6" gutterBottom>
-        Business Performance
-      </Typography>
+      {/* Dashboard Metrics */}
       <Grid container spacing={3} mb={4}>
         <Grid item xs={12} sm={6} lg={3}>
           <MetricCard>
             <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+              >
                 <Typography color="text.secondary" gutterBottom>
                   Total Bookings
                 </Typography>
-                <Avatar sx={{ bgcolor: 'primary.main' }}>
+                <Avatar sx={{ bgcolor: "primary.main" }}>
                   <EventIcon />
                 </Avatar>
               </Box>
               <Typography variant="h4" component="div">
-                {metrics.bookings.total}
+                {dashboardData.totalBookings || 0}
               </Typography>
-              <Box display="flex" alignItems="center" mt={1}>
-                {metrics.bookings.increasing ? (
-                  <ArrowUpwardIcon fontSize="small" color="success" />
-                ) : (
-                  <ArrowDownwardIcon fontSize="small" color="error" />
-                )}
-                <Typography 
-                  variant="body2" 
-                  color={metrics.bookings.increasing ? "success.main" : "error.main"}
-                  ml={0.5}
-                >
-                  {metrics.bookings.change}%
-                </Typography>
-              </Box>
+              <Button
+                variant="text"
+                size="small"
+                sx={{ mt: 1, p: 0 }}
+                onClick={() => navigate("/bookings")}
+              >
+                View Bookings
+              </Button>
             </CardContent>
           </MetricCard>
         </Grid>
+
         <Grid item xs={12} sm={6} lg={3}>
           <MetricCard>
             <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+              >
                 <Typography color="text.secondary" gutterBottom>
                   Revenue
                 </Typography>
-                <Avatar sx={{ bgcolor: 'success.main' }}>
+                <Avatar sx={{ bgcolor: "success.main" }}>
                   <AttachMoneyIcon />
                 </Avatar>
               </Box>
               <Typography variant="h4" component="div">
-                {metrics.revenue.total}
+                {dashboardData.revenue?.currency || "ETB"}{" "}
+                {(dashboardData.revenue?.total || 0).toLocaleString()}
               </Typography>
-              <Box display="flex" alignItems="center" mt={1}>
-                {metrics.revenue.increasing ? (
-                  <ArrowUpwardIcon fontSize="small" color="success" />
-                ) : (
-                  <ArrowDownwardIcon fontSize="small" color="error" />
-                )}
-                <Typography 
-                  variant="body2" 
-                  color={metrics.revenue.increasing ? "success.main" : "error.main"}
-                  ml={0.5}
-                >
-                  {metrics.revenue.change}%
-                </Typography>
-              </Box>
+              <Button
+                variant="text"
+                size="small"
+                sx={{ mt: 1, p: 0 }}
+                onClick={() => navigate("/Vendorpayemnt")}
+              >
+                View Revenue
+              </Button>
             </CardContent>
           </MetricCard>
         </Grid>
+
         <Grid item xs={12} sm={6} lg={3}>
           <MetricCard>
             <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+              >
                 <Typography color="text.secondary" gutterBottom>
                   Rating
                 </Typography>
-                <Avatar sx={{ bgcolor: 'warning.main' }}>
+                <Avatar sx={{ bgcolor: "warning.main" }}>
                   <StarIcon />
                 </Avatar>
               </Box>
               <Typography variant="h4" component="div">
-                {metrics.rating.total}
+                {(dashboardData.rating || 0).toFixed(1)}
               </Typography>
-              <Box display="flex" alignItems="center" mt={1}>
-                {metrics.rating.increasing ? (
-                  <ArrowUpwardIcon fontSize="small" color="success" />
-                ) : (
-                  <ArrowDownwardIcon fontSize="small" color="error" />
-                )}
-                <Typography 
-                  variant="body2" 
-                  color={metrics.rating.increasing ? "success.main" : "error.main"}
-                  ml={0.5}
-                >
-                  {metrics.rating.change}
-                </Typography>
-              </Box>
             </CardContent>
           </MetricCard>
         </Grid>
+
         <Grid item xs={12} sm={6} lg={3}>
           <MetricCard>
             <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+              >
                 <Typography color="text.secondary" gutterBottom>
-                  New Inquiries
+                  Messages
                 </Typography>
-                <Avatar sx={{ bgcolor: 'info.main' }}>
-                  <BusinessCenterIcon />
+                <Avatar sx={{ bgcolor: "info.main" }}>
+                  <Badge badgeContent={unreadMessages} color="error" max={99}>
+                    <ChatBubbleOutlineIcon />
+                  </Badge>
                 </Avatar>
               </Box>
               <Typography variant="h4" component="div">
-                {metrics.inquiries.total}
+                {unreadMessages}
               </Typography>
-              <Box display="flex" alignItems="center" mt={1}>
-                {metrics.inquiries.increasing ? (
-                  <ArrowUpwardIcon fontSize="small" color="success" />
-                ) : (
-                  <ArrowDownwardIcon fontSize="small" color="error" />
-                )}
-                <Typography 
-                  variant="body2" 
-                  color={metrics.inquiries.increasing ? "success.main" : "error.main"}
-                  ml={0.5}
-                >
-                  {metrics.inquiries.change}%
-                </Typography>
-              </Box>
+              <Button
+                variant="text"
+                size="small"
+                sx={{ mt: 1, p: 0 }}
+                onClick={() => navigate("/chats")}
+              >
+                View Messages
+              </Button>
             </CardContent>
           </MetricCard>
         </Grid>
       </Grid>
 
-      {/* Upcoming Events and Tasks */}
+      {/* Upcoming Events and Action Items */}
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <StyledCard>
-            <CardHeader 
-              title="Upcoming Events" 
+            <CardHeader
+              title="Upcoming Events"
               action={
                 <IconButton aria-label="settings">
                   <MoreVertIcon />
@@ -331,35 +291,53 @@ const VendorDashboard = () => {
             <Divider />
             <CardContent sx={{ flexGrow: 1 }}>
               <List>
-                {upcomingEvents.map((event) => (
-                  <ListItem key={event.id} divider>
-                    <ListItemIcon>
-                      <EventIcon color={event.status === 'Confirmed' ? 'success' : 'warning'} />
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary={event.title} 
-                      secondary={`${event.date} • ${event.status}`}
+                {upcomingEvents.length > 0 ? (
+                  upcomingEvents.map((event) => (
+                    <ListItem key={event.id} divider>
+                      <ListItemIcon>
+                        <EventIcon
+                          color={
+                            event.status === "Confirmed" ? "success" : "warning"
+                          }
+                        />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={event.title}
+                        secondary={`${new Date(
+                          event.date
+                        ).toLocaleDateString()} • ${event.status}`}
+                      />
+                      <Button size="small" variant="outlined">
+                        Details
+                      </Button>
+                    </ListItem>
+                  ))
+                ) : (
+                  <ListItem>
+                    <ListItemText
+                      primary="No upcoming events"
+                      secondary="Your confirmed bookings will appear here"
                     />
-                    <Button size="small" variant="outlined">Details</Button>
                   </ListItem>
-                ))}
+                )}
               </List>
             </CardContent>
             <Box p={2} display="flex" justifyContent="center">
-              <Button 
-                variant="text" 
-                color="primary" 
-                onClick={() => navigate('/vendor/events')}
+              <Button
+                variant="text"
+                color="primary"
+                onClick={() => navigate("/bookings")}
               >
-                View All Events
+                View All Bookings
               </Button>
             </Box>
           </StyledCard>
         </Grid>
+
         <Grid item xs={12} md={6}>
           <StyledCard>
-            <CardHeader 
-              title="Action Items" 
+            <CardHeader
+              title="Action Items"
               action={
                 <IconButton aria-label="settings">
                   <MoreVertIcon />
@@ -371,55 +349,67 @@ const VendorDashboard = () => {
               <List>
                 <ListItem divider>
                   <ListItemIcon>
+                    <Badge badgeContent={unreadMessages} color="error" max={99}>
+                      <ChatBubbleOutlineIcon color="primary" />
+                    </Badge>
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Messages"
+                    secondary={`${unreadMessages || 0} unread message${
+                      unreadMessages !== 1 ? "s" : ""
+                    }`}
+                  />
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="primary"
+                    onClick={() => navigate("/chats")}
+                  >
+                    View Chats
+                  </Button>
+                </ListItem>
+
+                <ListItem divider>
+                  <ListItemIcon>
                     <TaskIcon color="warning" />
                   </ListItemIcon>
-                  <ListItemText 
-                    primary="Respond to new inquiries" 
-                    secondary="5 new inquiries"
+                  <ListItemText
+                    primary="Pending Confirmations"
+                    secondary={`${
+                      dashboardData.pendingBookings?.count || 0
+                    } bookings need confirmation`}
                   />
-                  <Button size="small" variant="contained" color="primary">Respond</Button>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="primary"
+                    onClick={() => navigate("/bookings?filter=PENDING")}
+                  >
+                    Manage Bookings
+                  </Button>
                 </ListItem>
+
                 <ListItem divider>
                   <ListItemIcon>
-                    <TaskIcon color="info" />
+                    <EventIcon color="info" />
                   </ListItemIcon>
-                  <ListItemText 
-                    primary="Update service availability" 
-                    secondary="For next month"
+                  <ListItemText
+                    primary="Manage Services"
+                    secondary={`You have ${
+                      dashboardData.servicesCount || 0
+                    } services listed`}
                   />
-                  <Button size="small" variant="contained" color="primary">Update</Button>
-                </ListItem>
-                <ListItem divider>
-                  <ListItemIcon>
-                    <TaskIcon color="error" />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary="Complete profile" 
-                    secondary="2 sections remaining"
-                  />
-                  <Button size="small" variant="contained" color="primary">Complete</Button>
-                </ListItem>
-                <ListItem>
-                  <ListItemIcon>
-                    <CheckCircleIcon color="success" />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary="Confirm upcoming bookings" 
-                    secondary="3 pending confirmations"
-                  />
-                  <Button size="small" variant="contained" color="primary">Confirm</Button>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="primary"
+                    onClick={() => navigate("/Mangeservices")}
+                  >
+                    Manage Services
+                  </Button>
                 </ListItem>
               </List>
             </CardContent>
-            <Box p={2} display="flex" justifyContent="center">
-              <Button 
-                variant="text" 
-                color="primary" 
-                onClick={() => navigate('/vendor/tasks')}
-              >
-                View All Tasks
-              </Button>
-            </Box>
           </StyledCard>
         </Grid>
       </Grid>

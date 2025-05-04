@@ -32,7 +32,13 @@ export const ENDPOINTS = {
   // Vendor-specific endpoints
   VENDOR: {
     REGISTER: "/vendors/register",
-    SERVICES: "/vendors/services",
+    SERVICES: "/vendor/services",
+    DASHBOARD: "/vendor/dashboard/overview",
+    BOOKINGS: "/vendor/bookings",
+    CONVERSATIONS: "/vendor/conversations",
+    PAYMENTS: "/vendor/payment",
+    ACCOUNT_PROFILE: "/vendor/account/profile",
+    ACCOUNT_UPDATE: "/vendor/account/:id",
   },
 
   // Dashboard endpoints

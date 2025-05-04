@@ -9,6 +9,8 @@ import ChartIcon from "@mui/icons-material/BarChart";
 import user from "@mui/icons-material/Person";
 import feedback from "@mui/icons-material/Feedback";
 import payemnt from "@mui/icons-material/Payment";
+import BookOnlineIcon from "@mui/icons-material/BookOnline";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 
 // Import components from the pages folder
 import AdminDashboard from "../pages/admin/AdminDashboard";
@@ -26,7 +28,7 @@ import EventPlannerShow from "../pages/admin/EventPlanner/EventPlannerShow";
 import AdminPasswordEdit from "../pages/admin/Password/PasswordEdit";
 import AccountEdit from "../pages/user/Password/AccountEdit";
 import eventplannerPasswordEdit from "../pages/eventplanner/Password/PasswordEdit";
-import vendorPasswordEdit from "../pages/vendor/Password/PasswordEdit";
+import vendorAccountSettings from "../pages/vendor/Account/AccountSettings";
 
 // Import Vendor components
 import VendorList from "../pages/admin/Vendor/VendorList";
@@ -46,22 +48,26 @@ import userCreate from "../pages/admin/user/userCreate";
 import userEdit from "../pages/admin/user/userEdit";
 import userList from "../pages/admin/user/userList";
 import feedbackList from "../pages/admin/feedback/feedbacklist";
-import VendorpayemntList from "../pages/vendor/payment/payementList";
 import payemntList from "../pages/admin/payment/payementList";
 
 // chat in vendo side
 import ChatList from "../pages/vendor/chat/ChatList";
 import ChatInterface from "../pages/vendor/chat/ChatInterface";
-import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 
 import MyBookingsList from "../pages/user/MyBookings/MyBookingsList";
 import ChatInterfaceUser from "../pages/user/MyBookings/ChatInterface";
-import BookOnlineIcon from "@mui/icons-material/BookOnline";
 import PaymentList from "../pages/user/payment/PaymentList";
 import VendorListOne from "../pages/eventplanner/Vendor/VendorList";
 import userListOne from "../pages/eventplanner/user/userList";
 import feedbackListOne from "../pages/eventplanner/feedback/feedbacklist";
 import payemntListOne from "../pages/eventplanner/payment/payementList";
+
+// Import Vendor bookings components
+import BookingList from "../pages/vendor/bookings/BookingList";
+import BookingDetail from "../pages/vendor/bookings/BookingDetail";
+
+// Import our new payment dashboard component
+import PaymentDashboard from "../pages/vendor/payment/PaymentDashboard";
 
 export const adminResources = [
   {
@@ -165,6 +171,13 @@ export const vendorResources = [
     list: VendorDashboard,
   },
   {
+    name: "bookings",
+    label: "Bookings",
+    icon: BookOnlineIcon,
+    list: BookingList,
+    show: BookingDetail,
+  },
+  {
     name: "Mangeservices",
     label: "Mange Services",
     icon: EventIcon,
@@ -179,16 +192,16 @@ export const vendorResources = [
     icon: ChatBubbleOutlineIcon,
   },
   {
-    name: "Vendorpayemnt",
-    label: "payemnt",
+    name: "payments",
+    label: "Payments",
     icon: payemnt,
-    list: VendorpayemntList,
+    list: PaymentDashboard,
   },
   {
-    name: "password",
-    label: "Password",
+    name: "account",
+    label: "Account Settings",
     icon: PasswordIcon,
-    list: vendorPasswordEdit,
+    list: vendorAccountSettings,
   },
 ];
 

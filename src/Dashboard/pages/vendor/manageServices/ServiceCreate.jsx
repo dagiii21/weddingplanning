@@ -1,125 +1,126 @@
+import React, { useState } from "react";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  TextField,
+  Typography,
+  MenuItem,
+  CircularProgress,
+} from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import useVendorServices from "../../../../hooks/useVendorServices";
 
-import React, { useState } from 'react';
-import { 
-    Create, 
-    SimpleForm, 
-    TextInput,
-    BooleanInput, 
-    required,
-} from 'react-admin';
-import { Box, Typography, Divider } from '@mui/material';
-
-const PackageSection = ({ packageType, enabled, onToggle }) => {
-    return (
-        <Box sx={{ mb: 4, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                    {packageType} Package
-                </Typography>
-                <BooleanInput
-                    label="Enable Package"
-                    source={`packages.${packageType.toLowerCase()}.enabled`}
-                    defaultValue={enabled}
-                    onChange={onToggle}
-                />
-            </Box>
-            
-            {enabled && (
-                <>
-                    <TextInput 
-                        source={`packages.${packageType.toLowerCase()}.price`}
-                        type='number' 
-                        label="Price"  
-                        validate={required()} 
-                        fullWidth
-                    />
-                    <TextInput 
-                        source={`packages.${packageType.toLowerCase()}.features`}
-                        label="Features" 
-                        multiline
-                        rows={3}
-                        helperText="List the features included in this package"
-                        fullWidth
-                    />
-                    <TextInput 
-                        source={`packages.${packageType.toLowerCase()}.supportHours`}
-                        label="Support Hours"
-                        helperText="Specify support availability (e.g., 24/7, Business hours)"
-                        fullWidth
-                    />
-                    <TextInput 
-                        source={`packages.${packageType.toLowerCase()}.deliveryTime`}
-                        label="Delivery Time"
-                        helperText="Expected delivery time for this package"
-                        fullWidth
-                    />
-                </>
-            )}
-        </Box>
-    );
-};
+const SERVICE_CATEGORIES = ["Bronze", "Silver", "Gold", "Platinum"];
 
 const ServiceCreate = () => {
-    const [enabledPackages, setEnabledPackages] = useState({
-        silver: true,
-        gold: true,
-        platinum: true
-    });
+  const navigate = useNavigate();
+  const { addService } = useVendorServices();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    price: "",
+    category: "",
+  });
 
-    const handlePackageToggle = (packageType, enabled) => {
-        setEnabledPackages(prev => ({
-            ...prev,
-            [packageType]: enabled
-        }));
-    };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const serviceData = {
+        ...formData,
+        price: parseFloat(formData.price),
+      };
+      await addService(serviceData);
+      navigate("/Mangeservices"); // Navigate back to service list
+    } catch (err) {
+      console.error("Failed to create service:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    return (
-        <Create>
-            <SimpleForm>
-                <TextInput 
-                    source="ServiceName" 
-                    label="Service Name" 
-                    validate={required()} 
-                    fullWidth
-                />
-                <TextInput 
-                    source="description" 
-                    label="Service Description" 
-                    validate={required()} 
-                    multiline
-                    rows={3}
-                    fullWidth
-                />
-                <TextInput 
-                    source="phone" 
-                    type='tel' 
-                    validate={required()} 
-                    fullWidth
-                />
-
-                <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>
-                    Package Configuration
-                </Typography>
-                <Divider sx={{ mb: 3 }} />
-
-                <PackageSection 
-                    packageType="Silver"
-                    enabled={enabledPackages.silver}
-                    onToggle={(enabled) => handlePackageToggle('silver', enabled)}
-                />
-                <PackageSection 
-                    packageType="Gold"
-                    enabled={enabledPackages.gold}
-                    onToggle={(enabled) => handlePackageToggle('gold', enabled)}
-                />
-                <PackageSection 
-                    packageType="Platinum"
-                    enabled={enabledPackages.platinum}
-                    onToggle={(enabled) => handlePackageToggle('platinum', enabled)}
-                />
-            </SimpleForm>
-        </Create>
-    );
+  return (
+    <Box p={3}>
+      <Typography variant="h5" component="h1" gutterBottom>
+        Add New Service
+      </Typography>
+      <Card>
+        <CardContent>
+          <form onSubmit={handleSubmit}>
+            <TextField
+              fullWidth
+              label="Title"
+              value={formData.title}
+              onChange={(e) =>
+                setFormData({ ...formData, title: e.target.value })
+              }
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              label="Description"
+              value={formData.description}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
+              margin="normal"
+              multiline
+              rows={3}
+            />
+            <TextField
+              fullWidth
+              label="Price (ETB)"
+              type="number"
+              value={formData.price}
+              onChange={(e) =>
+                setFormData({ ...formData, price: e.target.value })
+              }
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              select
+              label="Category"
+              value={formData.category}
+              onChange={(e) =>
+                setFormData({ ...formData, category: e.target.value })
+              }
+              margin="normal"
+              required
+            >
+              {SERVICE_CATEGORIES.map((category) => (
+                <MenuItem key={category} value={category}>
+                  {category}
+                </MenuItem>
+              ))}
+            </TextField>
+            <Box mt={3} display="flex" justifyContent="flex-end" gap={2}>
+              <Button
+                variant="outlined"
+                onClick={() => navigate("/Mangeservices")}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                disabled={loading}
+              >
+                {loading ? <CircularProgress size={24} /> : "Create Service"}
+              </Button>
+            </Box>
+          </form>
+        </CardContent>
+      </Card>
+    </Box>
+  );
 };
 
 export default ServiceCreate;

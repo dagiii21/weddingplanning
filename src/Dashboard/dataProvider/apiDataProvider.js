@@ -1,4 +1,5 @@
 import api from "../../services/api";
+import { vendorService } from "../../services/api";
 import { API_URL } from "../../config/api.config";
 
 /**
@@ -7,6 +8,44 @@ import { API_URL } from "../../config/api.config";
  */
 const apiDataProvider = {
   getList: (resource, params) => {
+    // Special case for vendor payments dashboard
+    if (resource === "payments") {
+      return vendorService.getPayments().then((response) => {
+        if (!response.data || !response.data.success) {
+          return { data: [], total: 0 };
+        }
+
+        // Combine received and pending payments for the list
+        const receivedPayments = response.data.data.receivedPayments || [];
+        const pendingPayments = response.data.data.pendingPayments || [];
+
+        // Add a type field to each payment to identify it
+        const allPayments = [
+          ...receivedPayments.map((payment) => ({
+            ...payment,
+            type: "received",
+          })),
+          ...pendingPayments.map((payment) => ({
+            ...payment,
+            type: "pending",
+          })),
+        ];
+
+        return {
+          data: allPayments,
+          total: allPayments.length,
+          // Include the summary data for use in the dashboard
+          summary: {
+            totalPayments: response.data.data.totalPayments || 0,
+            receivedPaymentsCount: receivedPayments.length,
+            pendingPaymentsCount: pendingPayments.length,
+            vendorId: response.data.data.vendorId,
+          },
+        };
+      });
+    }
+
+    // Default behavior for other resources
     const { page, perPage } = params.pagination;
     const { field, order } = params.sort;
     const query = {

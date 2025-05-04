@@ -95,6 +95,27 @@ export const userService = {
 export const vendorService = {
   register: (data) => api.post(ENDPOINTS.VENDOR.REGISTER, data),
   getServices: () => api.get(ENDPOINTS.VENDOR.SERVICES),
+  getDashboardData: async () => {
+    try {
+      const response = await api.get(ENDPOINTS.VENDOR.DASHBOARD);
+      return {
+        ...response,
+        data: response.data?.data || response.data || {},
+      };
+    } catch (error) {
+      console.error("Error fetching vendor dashboard:", error);
+      throw error;
+    }
+  },
+  getConversations: () => api.get(ENDPOINTS.VENDOR.CONVERSATIONS),
+  startConversation: (clientId) =>
+    api.post(ENDPOINTS.VENDOR.CONVERSATIONS, { clientId }),
+  getPayments: () => api.get(ENDPOINTS.VENDOR.PAYMENTS),
+  getProfile: () => api.get(ENDPOINTS.VENDOR.ACCOUNT_PROFILE),
+  updateAccount: (vendorId, data) => {
+    const url = ENDPOINTS.VENDOR.ACCOUNT_UPDATE.replace(":id", vendorId);
+    return api.patch(url, data);
+  },
 };
 
 /**
