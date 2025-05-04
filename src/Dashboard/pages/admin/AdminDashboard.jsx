@@ -20,6 +20,7 @@ import {
   CircularProgress,
   Rating,
   Chip,
+  Alert,
 } from "@mui/material";
 
 // Icons
@@ -43,6 +44,7 @@ import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import CommentIcon from "@mui/icons-material/Comment";
+import { adminService } from "../../../services/api";
 
 // Styled components
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -78,119 +80,31 @@ const QuickActionButton = styled(Button)(({ theme }) => ({
   textTransform: "none",
 }));
 
-// Mock data functions - in a real app these would fetch from API
-const getMockMetrics = () => {
-  return {
-    users: {
-      total: 1250,
-      change: 5.8,
-      increasing: true,
-    },
-    vendors: {
-      total: 86,
-      change: -2.1,
-      increasing: false,
-    },
-    eventPlanners: {
-      total: 124,
-      change: 7.3,
-      increasing: true,
-    },
-    activeBookings: {
-      total: 348,
-      change: 12.3,
-      increasing: true,
-    },
-  };
-};
-
-const getMockPaymentsHistory = () => {
-  return [
-    {
-      id: 1,
-      user: "John Smith",
-      amount: "$450.00",
-      date: "2023-08-15",
-      status: "Completed",
-      event: "Wedding Reception",
-    },
-    {
-      id: 2,
-      user: "Sarah Johnson",
-      amount: "$1,200.00",
-      date: "2023-08-14",
-      status: "Completed",
-      event: "Corporate Event",
-    },
-    {
-      id: 3,
-      user: "Michael Brown",
-      amount: "$350.00",
-      date: "2023-08-12",
-      status: "Pending",
-      event: "Birthday Party",
-    },
-    {
-      id: 4,
-      user: "Emily Davis",
-      amount: "$800.00",
-      date: "2023-08-10",
-      status: "Completed",
-      event: "Anniversary Celebration",
-    },
-  ];
-};
-
-const getMockFeedback = () => {
-  return [
-    {
-      id: 1,
-      user: "Jessica Williams",
-      rating: 5,
-      comment: "Amazing service! The event was perfect.",
-      date: "2023-08-14",
-    },
-    {
-      id: 2,
-      user: "Robert Taylor",
-      rating: 4,
-      comment: "Great experience overall. Would recommend.",
-      date: "2023-08-13",
-    },
-    {
-      id: 3,
-      user: "Amanda Miller",
-      rating: 5,
-      comment: "Exceeded our expectations. Thank you!",
-      date: "2023-08-11",
-    },
-    {
-      id: 4,
-      user: "David Wilson",
-      rating: 3,
-      comment: "Good service but some delays in communication.",
-      date: "2023-08-09",
-    },
-  ];
-};
-
 const Dashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState(null);
   const [paymentsHistory, setPaymentsHistory] = useState([]);
   const [feedback, setFeedback] = useState([]);
+  const [error, setError] = useState(null);
 
-  // Simulate data loading
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMetrics(getMockMetrics());
-      setPaymentsHistory(getMockPaymentsHistory());
-      setFeedback(getMockFeedback());
-      setLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
+    setLoading(true);
+    Promise.all([
+      adminService.getOverview(),
+      adminService.getPayments(),
+      adminService.getFeedbacks(),
+    ])
+      .then(([overviewRes, paymentsRes, feedbackRes]) => {
+        setMetrics(overviewRes.data);
+        setPaymentsHistory(paymentsRes.data);
+        setFeedback(feedbackRes.data);
+        setError(null);
+      })
+      .catch(() => {
+        setError("Failed to load dashboard data. Please try again later.");
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const HomeButton = () => {
@@ -215,6 +129,28 @@ const Dashboard = () => {
         height="100vh"
       >
         <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box p={3}>
+        <HomeButton />
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      </Box>
+    );
+  }
+
+  if (!metrics) {
+    return (
+      <Box p={3}>
+        <HomeButton />
+        <Alert severity="warning">
+          No data available. Please check your connection and try again.
+        </Alert>
       </Box>
     );
   }
@@ -256,10 +192,10 @@ const Dashboard = () => {
                 </Avatar>
               </Box>
               <Typography variant="h4" component="div">
-                {metrics.users.total}
+                {metrics.totalClients}
               </Typography>
               <Box display="flex" alignItems="center" mt={1}>
-                {metrics.users.increasing ? (
+                {metrics.clientGrowth > 0 ? (
                   <ArrowUpwardIcon fontSize="small" color="success" />
                 ) : (
                   <ArrowDownwardIcon fontSize="small" color="error" />
@@ -267,11 +203,11 @@ const Dashboard = () => {
                 <Typography
                   variant="body2"
                   color={
-                    metrics.users.increasing ? "success.main" : "error.main"
+                    metrics.clientGrowth > 0 ? "success.main" : "error.main"
                   }
                   ml={0.5}
                 >
-                  {metrics.users.change}%
+                  {Math.abs(metrics.clientGrowth)}%
                 </Typography>
               </Box>
             </CardContent>
@@ -295,10 +231,10 @@ const Dashboard = () => {
                 </Avatar>
               </Box>
               <Typography variant="h4" component="div">
-                {metrics.vendors.total}
+                {metrics.totalVendors}
               </Typography>
               <Box display="flex" alignItems="center" mt={1}>
-                {metrics.vendors.increasing ? (
+                {metrics.vendorGrowth > 0 ? (
                   <ArrowUpwardIcon fontSize="small" color="success" />
                 ) : (
                   <ArrowDownwardIcon fontSize="small" color="error" />
@@ -306,11 +242,11 @@ const Dashboard = () => {
                 <Typography
                   variant="body2"
                   color={
-                    metrics.vendors.increasing ? "success.main" : "error.main"
+                    metrics.vendorGrowth > 0 ? "success.main" : "error.main"
                   }
                   ml={0.5}
                 >
-                  {metrics.vendors.change}%
+                  {Math.abs(metrics.vendorGrowth)}%
                 </Typography>
               </Box>
             </CardContent>
@@ -334,10 +270,10 @@ const Dashboard = () => {
                 </Avatar>
               </Box>
               <Typography variant="h4" component="div">
-                {metrics.eventPlanners.total}
+                {metrics.totalEventPlanners}
               </Typography>
               <Box display="flex" alignItems="center" mt={1}>
-                {metrics.eventPlanners.increasing ? (
+                {metrics.eventPlannerGrowth > 0 ? (
                   <ArrowUpwardIcon fontSize="small" color="success" />
                 ) : (
                   <ArrowDownwardIcon fontSize="small" color="error" />
@@ -345,13 +281,13 @@ const Dashboard = () => {
                 <Typography
                   variant="body2"
                   color={
-                    metrics.eventPlanners.increasing
+                    metrics.eventPlannerGrowth > 0
                       ? "success.main"
                       : "error.main"
                   }
                   ml={0.5}
                 >
-                  {metrics.eventPlanners.change}%
+                  {Math.abs(metrics.eventPlannerGrowth)}%
                 </Typography>
               </Box>
             </CardContent>
@@ -375,10 +311,10 @@ const Dashboard = () => {
                 </Avatar>
               </Box>
               <Typography variant="h4" component="div">
-                {metrics.activeBookings.total}
+                {metrics.activeBookings}
               </Typography>
               <Box display="flex" alignItems="center" mt={1}>
-                {metrics.activeBookings.increasing ? (
+                {metrics.bookingGrowth > 0 ? (
                   <ArrowUpwardIcon fontSize="small" color="success" />
                 ) : (
                   <ArrowDownwardIcon fontSize="small" color="error" />
@@ -386,13 +322,11 @@ const Dashboard = () => {
                 <Typography
                   variant="body2"
                   color={
-                    metrics.activeBookings.increasing
-                      ? "success.main"
-                      : "error.main"
+                    metrics.bookingGrowth > 0 ? "success.main" : "error.main"
                   }
                   ml={0.5}
                 >
-                  {metrics.activeBookings.change}%
+                  {Math.abs(metrics.bookingGrowth)}%
                 </Typography>
               </Box>
             </CardContent>
@@ -421,18 +355,20 @@ const Dashboard = () => {
                     <ListItemIcon>
                       <PaymentsIcon
                         color={
-                          payment.status === "Completed" ? "success" : "warning"
+                          payment.status === "COMPLETED" ? "success" : "warning"
                         }
                       />
                     </ListItemIcon>
                     <ListItemText
-                      primary={`${payment.user} - ${payment.amount}`}
-                      secondary={`${payment.date} • ${payment.event}`}
+                      primary={`${payment.userName} - $${payment.amount}`}
+                      secondary={`${new Date(
+                        payment.date
+                      ).toLocaleDateString()} • ${payment.eventName}`}
                     />
                     <Chip
                       label={payment.status}
                       color={
-                        payment.status === "Completed" ? "success" : "warning"
+                        payment.status === "COMPLETED" ? "success" : "warning"
                       }
                       size="small"
                       sx={{ mr: 1 }}
@@ -484,7 +420,7 @@ const Dashboard = () => {
                       />
                     </ListItemIcon>
                     <ListItemText
-                      primary={item.user}
+                      primary={item.userName}
                       secondary={
                         <Box>
                           <Rating
@@ -497,7 +433,7 @@ const Dashboard = () => {
                             "{item.comment}"
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {item.date}
+                            {new Date(item.date).toLocaleDateString()}
                           </Typography>
                         </Box>
                       }

@@ -14,7 +14,7 @@ const EventPlannerCreate = () => {
       <SimpleForm>
         <TextInput source="name" validate={required()} />
         <TextInput source="email" validate={[required(), email()]} />
-        <TextInput source="password" validate={[required(), email()]} />
+        <TextInput source="password" validate={[required()]} />
         <TextInput source="phone" type='tel' validate={[required()]} />
       </SimpleForm>
     </Create>

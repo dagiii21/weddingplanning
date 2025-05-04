@@ -16,7 +16,7 @@ const VendorList = () => {
       <Datagrid>
         <TextField source="id" />
         <TextField source="name" />
-        <TextField source="type" />
+        <TextField source="serviceType" label="Type" />
         <EmailField source="email" />
         <TextField source="phone" />
         <EditButton />
