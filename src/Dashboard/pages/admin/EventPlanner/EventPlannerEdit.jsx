@@ -13,10 +13,13 @@ const EventPlannerEdit = () => {
   return (
     <Edit>
       <SimpleForm>
-           <TextInput source="name" validate={required()} />
-           <TextInput source="email" validate={[required(), email()]} />
-           <TextInput source="password" validate={[required(), email()]} />
-           <TextInput source="phone" type='tel' validate={[required()]} />
+        <TextInput disabled source="id" />
+        <TextInput source="firstName" validate={required()} />
+        <TextInput source="lastName" validate={required()} />
+        <TextInput source="email" validate={[required(), email()]} />
+        <TextInput source="phone" type='tel' validate={[required()]} />
+        {/* If your backend has a serviceType for event planners, add this: */}
+        {/* <SelectInput source="serviceType" choices={[ ... ]} label="Type" /> */}
       </SimpleForm>
     </Edit>
   );

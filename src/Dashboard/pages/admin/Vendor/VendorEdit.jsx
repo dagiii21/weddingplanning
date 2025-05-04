@@ -16,14 +16,14 @@ const VendorEdit = () => {
       <SimpleForm>
         <TextInput disabled source="id" />
         <TextInput source="name" validate={required()} />
-        <SelectInput source="type" choices={[
+        <SelectInput source="serviceType" choices={[
           { id: 'venue', name: 'Venue' },
           { id: 'catering', name: 'Catering' },
           { id: 'photography', name: 'Photography' },
           { id: 'flowers', name: 'Flowers' },
           { id: 'music', name: 'Music' },
           { id: 'other', name: 'Other' },
-        ]} validate={required()} />
+        ]} validate={required()} label="Type" />
         <TextInput source="email" validate={[required(), email()]} />
         <TextInput source="phone" />
         <DateInput source="createdAt" disabled />
