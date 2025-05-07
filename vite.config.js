@@ -1,7 +1,11 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
-import path from 'path'; // Add this import
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export default defineConfig({
   plugins: [
@@ -12,12 +16,21 @@ export default defineConfig({
     host: true,
     strictPort: true,
     port: 8000,
-    },
+  },
+  preview: {
+    host: true,
+    port: process.env.PORT || 4173,
+    strictPort: true,
+    allowedHosts: [
+      'weddingplanning-3.onrender.com',
+      'localhost' // keep for local development
+    ]
+  },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@config': path.resolve(__dirname, './src/config'),
-      '@services': path.resolve(__dirname, './src/services')
+      '@': resolve(__dirname, './src'),
+      '@config': resolve(__dirname, './src/config'),
+      '@services': resolve(__dirname, './src/services')
     }
   }
 });
