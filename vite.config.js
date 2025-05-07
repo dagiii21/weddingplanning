@@ -16,6 +16,7 @@ export default defineConfig({
     host: true,
     strictPort: true,
     port: 8000,
+    allowedHosts: ['weddingplanning-3.onrender.com']
   },
   preview: {
     host: true,
