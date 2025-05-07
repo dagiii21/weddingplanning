@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { ENDPOINTS } from '../config/api.config';
+import { API_URL, ENDPOINTS } from '../config/api.config';
 
 
 // Define Ethiopian phone number regex
@@ -12,24 +12,23 @@ const ethiopianPhoneRegex = /^(09[0-9]{8}|\+251[0-9]{9})$/;
 
 // Define validation schema using Zod
 export const signUpSchema = z.object({
-  username: z.string()
-    .min(3, { message: 'Username must be at least 3 characters' })
-    .max(50, { message: 'Username must be less than 50 characters' }),
-  
+  firstName: z.string()
+    .min(2, { message: 'First name must be at least 2 characters' })
+    .max(50, { message: 'First name must be less than 50 characters' }),
+  lastName: z.string()
+    .min(2, { message: 'Last name must be at least 2 characters' })
+    .max(50, { message: 'Last name must be less than 50 characters' }),
   email: z.string()
     .email({ message: 'Please enter a valid email address' }),
-  
-  phoneNumber: z.string()
+  phone: z.string()
     .regex(ethiopianPhoneRegex, { 
       message: 'Please enter a valid Ethiopian phone number (09XXXXXXXX or +251XXXXXXXXX)' 
     }),
-  
   password: z.string()
     .min(8, { message: 'Password must be at least 8 characters' })
     .regex(/[A-Z]/, { message: 'Password must contain at least one uppercase letter' })
     .regex(/[a-z]/, { message: 'Password must contain at least one lowercase letter' })
     .regex(/[0-9]/, { message: 'Password must contain at least one number' }),
-  
   confirmPassword: z.string()
 })
 .refine(data => data.password === data.confirmPassword, {
@@ -42,9 +41,10 @@ export const signUpSchema = z.object({
 export const useSignUpForm = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    username: '',
+    firstName: '',
+    lastName: '',
     email: '',
-    phoneNumber: '',
+    phone: '',
     password: '',
     confirmPassword: ''
   });
@@ -78,7 +78,7 @@ export const useSignUpForm = () => {
     const { name, value } = e.target;
     
     // Special handling for phone number to allow formatting while typing
-    if (name === 'phoneNumber') {
+    if (name === 'phone') {
       // Remove any non-digit characters except the + sign at the beginning
       const cleanedValue = value.replace(/[^\d+]/g, '');
       setFormData(prev => ({ ...prev, [name]: cleanedValue }));
@@ -112,7 +112,7 @@ export const useSignUpForm = () => {
       }
       
       // For other fields
-      fieldSchema.parse({ [name]: name === 'phoneNumber' ? value.replace(/\s/g, '') : value });
+      fieldSchema.parse({ [name]: name === 'phone' ? value.replace(/\s/g, '') : value });
       
       // Clear error if validation passes
       setErrors(prev => ({ ...prev, [name]: undefined }));
@@ -129,14 +129,15 @@ export const useSignUpForm = () => {
     try {
       // Prepare the data for the API
       const apiData = {
-        username: userData.username,
         email: userData.email,
-        phoneNumber: userData.phoneNumber,
-        password: userData.password
+        password: userData.password,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        phone: userData.phone
       };
       
       // Make the API call
-      const response = await axios.post(ENDPOINTS.REGISTER, apiData);
+      const response = await axios.post(API_URL + ENDPOINTS.AUTH.REGISTER, apiData);
       return response.data;
     } catch (error) {
       // Handle API errors
@@ -161,7 +162,7 @@ export const useSignUpForm = () => {
     
     try {
       // Validate all fields
-      signUpSchema.parse(formData);
+      signUpSchema.parse(formData); 
       
       // If validation passes, submit the form
       setIsSubmitting(true);
@@ -186,9 +187,10 @@ export const useSignUpForm = () => {
         
         // Reset form after successful submission
         setFormData({
-          username: '',
+          firstName: '',
+          lastName: '',
           email: '',
-          phoneNumber: '',
+          phone: '',
           password: '',
           confirmPassword: ''
         });
@@ -242,7 +244,7 @@ export const useSignUpForm = () => {
   // Handle phone input focus to add country code
   const handlePhoneFocus = (e) => {
     if (!e.target.value) {
-      setFormData(prev => ({ ...prev, phoneNumber: '+251' }));
+      setFormData(prev => ({ ...prev, phone: '+251' }));
     }
   };
 

@@ -3,12 +3,27 @@ import {
   Edit, 
   SimpleForm, 
   TextInput, 
-  BooleanInput, 
   DateInput, 
   SelectInput,
   email,
   required
 } from 'react-admin';
+
+const serviceTypes = [
+  { id: 'CATERING', name: 'Catering' },
+  { id: 'VENUE', name: 'Venue' },
+  { id: 'PHOTOGRAPHY', name: 'Photography' },
+  { id: 'MUSIC', name: 'Music' },
+  { id: 'FLOWERS', name: 'Flowers' },
+  { id: 'CAKE', name: 'Cake' },
+  { id: 'ATTIRE', name: 'Attire' },
+  { id: 'OTHER', name: 'Other' }
+];
+
+const statusChoices = [
+  { id: 'APPROVED', name: 'Approved' },
+  { id: 'SUSPENDED', name: 'Suspended' }
+];
 
 const VendorEdit = () => {
   return (
@@ -16,18 +31,20 @@ const VendorEdit = () => {
       <SimpleForm>
         <TextInput disabled source="id" />
         <TextInput source="name" validate={required()} />
-        <SelectInput source="serviceType" choices={[
-          { id: 'venue', name: 'Venue' },
-          { id: 'catering', name: 'Catering' },
-          { id: 'photography', name: 'Photography' },
-          { id: 'flowers', name: 'Flowers' },
-          { id: 'music', name: 'Music' },
-          { id: 'other', name: 'Other' },
-        ]} validate={required()} label="Type" />
         <TextInput source="email" validate={[required(), email()]} />
-        <TextInput source="phone" />
+        <TextInput source="phone" type="tel" />
+        <TextInput source="businessName" label="Business Name" />
+        <SelectInput 
+          source="serviceType" 
+          choices={serviceTypes}
+          label="Service Type"
+        />
         <DateInput source="createdAt" disabled />
-        <BooleanInput source="isActive" />
+        <SelectInput 
+          source="status" 
+          choices={statusChoices}
+          label="Account Status"
+        />
       </SimpleForm>
     </Edit>
   );

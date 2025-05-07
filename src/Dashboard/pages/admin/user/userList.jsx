@@ -14,9 +14,14 @@ const userList = () => {
   return (
     <List>
       <Datagrid>
-        <TextField source="name" />
+        <TextField source="name" label="Name" />
         <EmailField source="email" />
-        <TextField source="phone" />
+        <TextField source="phone" label="Phone Number" />
+        <TextField 
+          source="isActive" 
+          label="Status"
+          render={record => record.isActive ? 'Active' : 'Blocked'}
+        />
         <EditButton />
         <ShowButton />
       </Datagrid>

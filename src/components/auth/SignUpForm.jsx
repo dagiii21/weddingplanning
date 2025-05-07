@@ -23,23 +23,43 @@ const SignUpForm = () => {
       )}
       
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Username Field */}
+        {/* First Name Field */}
         <div>
-          <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-            Username
+          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+            First Name
           </label>
           <input
-            id="username"
-            name="username"
+            id="firstName"
+            name="firstName"
             type="text"
-            value={formData.username}
+            value={formData.firstName}
             onChange={handleChange}
             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-colors
-                      ${errors.username ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-purple-200 focus:border-purple-400'}`}
-            placeholder="Enter your username"
+                      ${errors.firstName ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-purple-200 focus:border-purple-400'}`}
+            placeholder="Enter your first name"
           />
-          {errors.username && (
-            <p className="mt-1 text-sm text-red-600">{errors.username}</p>
+          {errors.firstName && (
+            <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
+          )}
+        </div>
+
+        {/* Last Name Field */}
+        <div>
+          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+            Last Name
+          </label>
+          <input
+            id="lastName"
+            name="lastName"
+            type="text"
+            value={formData.lastName}
+            onChange={handleChange}
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-colors
+                      ${errors.lastName ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-purple-200 focus:border-purple-400'}`}
+            placeholder="Enter your last name"
+          />
+          {errors.lastName && (
+            <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
           )}
         </div>
 
@@ -65,9 +85,10 @@ const SignUpForm = () => {
 
         {/* Phone Number Field with Ethiopian Flag */}
         <PhoneInput
-          value={formData.phoneNumber}
+          value={formData.phone}
           onChange={handleChange}
-          error={errors.phoneNumber}
+          error={errors.phone}
+          name="phone"
         />
 
         {/* Password Field */}
