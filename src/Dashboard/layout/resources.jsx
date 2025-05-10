@@ -10,7 +10,6 @@ import user from "@mui/icons-material/Person";
 import feedback from "@mui/icons-material/Feedback";
 import payemnt from "@mui/icons-material/Payment";
 import BookOnlineIcon from "@mui/icons-material/BookOnline";
-import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 
 // Import components from the pages folder
 import AdminDashboard from "../pages/admin/AdminDashboard";
@@ -50,12 +49,7 @@ import userList from "../pages/admin/user/userList";
 import feedbackList from "../pages/admin/feedback/feedbacklist";
 import payemntList from "../pages/admin/payment/payementList";
 
-// chat in vendo side
-import ChatList from "../pages/vendor/chat/ChatList";
-import ChatInterface from "../pages/vendor/chat/ChatInterface";
-
 import MyBookingsList from "../pages/user/MyBookings/MyBookingsList";
-import ChatInterfaceUser from "../pages/user/MyBookings/ChatInterface";
 import PaymentList from "../pages/user/payment/PaymentList";
 import VendorListOne from "../pages/eventplanner/Vendor/VendorList";
 import userListOne from "../pages/eventplanner/user/userList";
@@ -186,12 +180,6 @@ export const vendorResources = [
     create: ServiceCreate,
   },
   {
-    name: "chats",
-    list: ChatList,
-    show: ChatInterface,
-    icon: ChatBubbleOutlineIcon,
-  },
-  {
     name: "payments",
     label: "Payments",
     icon: payemnt,
@@ -216,7 +204,6 @@ export const userResources = [
   {
     name: "my-bookings",
     list: MyBookingsList,
-    show: ChatInterfaceUser,
     icon: BookOnlineIcon,
     options: { label: "My Bookings" },
   },

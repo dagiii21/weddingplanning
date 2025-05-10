@@ -45,249 +45,8 @@ import {
   Receipt as ReceiptIcon,
 } from "@mui/icons-material";
 import useVendorBookings from "../../../../hooks/useVendorBookings";
-import useVendorChat from "../../../../hooks/useVendorChat";
 import { toast } from "react-toastify";
 import { format } from "date-fns";
-
-// Chat dialog component
-const ChatDialog = ({ open, onClose, clientId, clientName, clientAvatar }) => {
-  const {
-    currentConversation,
-    messages,
-    loading,
-    error,
-    startConversation,
-    selectConversation,
-    sendMessage,
-  } = useVendorChat();
-  const [newMessage, setNewMessage] = useState("");
-  const [initializing, setInitializing] = useState(false);
-  const messagesEndRef = React.useRef(null);
-
-  // Initialize conversation with client
-  useEffect(() => {
-    if (open && clientId && !initializing) {
-      setInitializing(true);
-      startConversation(clientId)
-        .then(() => setInitializing(false))
-        .catch((err) => {
-          console.error("Error starting conversation:", err);
-          toast.error("Could not start conversation with client");
-          setInitializing(false);
-        });
-    }
-
-    // Cleanup when dialog closes
-    return () => {
-      if (!open) {
-        selectConversation(null);
-      }
-    };
-  }, [open, clientId, startConversation, selectConversation, initializing]);
-
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !currentConversation) return;
-
-    sendMessage(newMessage.trim());
-    setNewMessage("");
-  };
-
-  const formatTime = (timestamp) => {
-    return format(new Date(timestamp), "h:mm a");
-  };
-
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-      PaperProps={{ sx: { height: "70vh" } }}
-    >
-      <DialogTitle
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          borderBottom: 1,
-          borderColor: "divider",
-        }}
-      >
-        <Avatar sx={{ mr: 2 }} src={clientAvatar}>
-          <PersonIcon />
-        </Avatar>
-        <Typography variant="h6">Chat with {clientName}</Typography>
-      </DialogTitle>
-
-      <DialogContent
-        sx={{
-          padding: 2,
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-        }}
-      >
-        {loading || initializing ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            height="100%"
-          >
-            <CircularProgress />
-          </Box>
-        ) : error ? (
-          <Box
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            justifyContent="center"
-            height="100%"
-          >
-            <Typography color="error" variant="subtitle1" gutterBottom>
-              {error}
-            </Typography>
-            <Button
-              variant="contained"
-              onClick={() => startConversation(clientId)}
-            >
-              Retry
-            </Button>
-          </Box>
-        ) : (
-          <Box sx={{ flexGrow: 1, overflowY: "auto", mb: 2 }}>
-            {messages.length === 0 ? (
-              <Box
-                display="flex"
-                flexDirection="column"
-                alignItems="center"
-                justifyContent="center"
-                height="100%"
-              >
-                <ChatIcon sx={{ fontSize: 60, color: "action.disabled" }} />
-                <Typography variant="body1" color="text.secondary" mt={2}>
-                  No messages yet. Start the conversation!
-                </Typography>
-              </Box>
-            ) : (
-              <List>
-                {messages.map((message) => {
-                  const isVendorMessage =
-                    message.senderId === currentConversation?.userId;
-
-                  return (
-                    <ListItem
-                      key={message.id}
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: isVendorMessage ? "flex-end" : "flex-start",
-                        p: 1,
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexDirection: isVendorMessage
-                            ? "row-reverse"
-                            : "row",
-                          alignItems: "flex-start",
-                          maxWidth: "80%",
-                        }}
-                      >
-                        {!isVendorMessage && (
-                          <Avatar
-                            sx={{ mr: 1, width: 32, height: 32 }}
-                            src={clientAvatar}
-                          >
-                            <PersonIcon />
-                          </Avatar>
-                        )}
-
-                        <Paper
-                          elevation={0}
-                          sx={{
-                            p: 1.5,
-                            borderRadius: 2,
-                            bgcolor: isVendorMessage
-                              ? "primary.main"
-                              : "grey.200",
-                            color: isVendorMessage ? "white" : "text.primary",
-                          }}
-                        >
-                          <Typography variant="body1">
-                            {message.content}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              display: "block",
-                              textAlign: "right",
-                              mt: 0.5,
-                              opacity: 0.8,
-                            }}
-                          >
-                            {formatTime(message.createdAt)}
-                          </Typography>
-                        </Paper>
-                      </Box>
-                    </ListItem>
-                  );
-                })}
-                <div ref={messagesEndRef} />
-              </List>
-            )}
-          </Box>
-        )}
-
-        <Box
-          component="form"
-          onSubmit={handleSendMessage}
-          sx={{
-            display: "flex",
-            borderTop: 1,
-            borderColor: "divider",
-            pt: 2,
-          }}
-        >
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Type a message..."
-            size="small"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            disabled={loading || initializing || !currentConversation}
-            sx={{ mr: 1 }}
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            endIcon={<SendIcon />}
-            type="submit"
-            disabled={
-              !newMessage.trim() ||
-              loading ||
-              initializing ||
-              !currentConversation
-            }
-          >
-            Send
-          </Button>
-        </Box>
-      </DialogContent>
-
-      <DialogActions>
-        <Button onClick={onClose}>Close</Button>
-      </DialogActions>
-    </Dialog>
-  );
-};
 
 const BookingDetail = () => {
   const { bookingId } = useParams();
@@ -304,7 +63,6 @@ const BookingDetail = () => {
 
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancellationReason, setCancellationReason] = useState("");
-  const [chatDialogOpen, setChatDialogOpen] = useState(false);
 
   // Fetch booking details on component mount
   useEffect(() => {
@@ -341,11 +99,6 @@ const BookingDetail = () => {
     } catch (err) {
       console.error("Error completing booking:", err);
     }
-  };
-
-  const handleStartChat = () => {
-    if (!currentBooking?.client?.id) return;
-    setChatDialogOpen(true);
   };
 
   const getStatusChip = (status) => {
@@ -436,14 +189,6 @@ const BookingDetail = () => {
           Booking Details
         </Typography>
         <Box ml="auto" display="flex" alignItems="center" gap={2}>
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<ChatIcon />}
-            onClick={handleStartChat}
-          >
-            Chat with Client
-          </Button>
           {getStatusChip(currentBooking.status)}
         </Box>
       </Box>
@@ -489,15 +234,6 @@ const BookingDetail = () => {
                 />
               }
               title="Client Information"
-              action={
-                <Button
-                  startIcon={<ChatIcon />}
-                  size="small"
-                  onClick={handleStartChat}
-                >
-                  Chat
-                </Button>
-              }
             />
             <Divider />
             <CardContent>
@@ -850,17 +586,6 @@ const BookingDetail = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Chat Dialog */}
-      {currentBooking && (
-        <ChatDialog
-          open={chatDialogOpen}
-          onClose={() => setChatDialogOpen(false)}
-          clientId={currentBooking.client.userId}
-          clientName={`${currentBooking.client.user.firstName} ${currentBooking.client.user.lastName}`}
-          clientAvatar={currentBooking.client.user.avatar}
-        />
-      )}
     </Box>
   );
 };

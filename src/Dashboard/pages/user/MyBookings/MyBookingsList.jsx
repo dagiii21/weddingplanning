@@ -20,16 +20,12 @@ import {
   MenuItem,
   IconButton,
   Grid,
-  Dialog,
-  DialogContent,
 } from "@mui/material";
-import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import RefreshIcon from "@mui/icons-material/Refresh";
 
 // Import custom hook for client bookings
 import useClientBookings from "../../../../hooks/useClientBookings";
-import ChatInterface from "./ChatInterface";
 
 // Format date helper function
 const formatDate = (dateString) => {
@@ -94,20 +90,6 @@ const PackageChip = ({ category }) => {
   );
 };
 
-const ChatButton = ({ vendorId, unreadCount = 0, onChatOpen }) => {
-  return (
-    <Button
-      color="primary"
-      variant="outlined"
-      size="small"
-      onClick={() => onChatOpen(vendorId)}
-      startIcon={<ChatBubbleOutlineIcon />}
-    >
-      {unreadCount > 0 ? `Chat (${unreadCount})` : "Chat"}
-    </Button>
-  );
-};
-
 const MyBookingsList = () => {
   // Use the custom hook to fetch and manage bookings
   const {
@@ -122,8 +104,6 @@ const MyBookingsList = () => {
 
   const [showFilters, setShowFilters] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [chatDialogOpen, setChatDialogOpen] = useState(false);
-  const [selectedVendorId, setSelectedVendorId] = useState(null);
 
   const handlePageChange = (event, page) => {
     changePage(page);
@@ -140,15 +120,6 @@ const MyBookingsList = () => {
 
   const toggleFilters = () => {
     setShowFilters(!showFilters);
-  };
-
-  const handleChatOpen = (vendorId) => {
-    setSelectedVendorId(vendorId);
-    setChatDialogOpen(true);
-  };
-
-  const handleChatClose = () => {
-    setChatDialogOpen(false);
   };
 
   if (loading) {
@@ -261,11 +232,16 @@ const MyBookingsList = () => {
                     <StatusChip status={booking.status} />
                   </TableCell>
                   <TableCell>
-                    <ChatButton
-                      vendorId={booking.vendor.userId || booking.vendor.id}
-                      unreadCount={0}
-                      onChatOpen={handleChatOpen}
-                    />
+                    <Button
+                      color="primary"
+                      variant="outlined"
+                      size="small"
+                      onClick={() => {
+                        /* View details */
+                      }}
+                    >
+                      View Details
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -284,18 +260,6 @@ const MyBookingsList = () => {
           />
         </Box>
       )}
-
-      {/* Chat Dialog */}
-      <Dialog
-        open={chatDialogOpen}
-        onClose={handleChatClose}
-        fullWidth
-        maxWidth="md"
-      >
-        <DialogContent sx={{ p: 0 }}>
-          <ChatInterface vendorId={selectedVendorId} onBack={handleChatClose} />
-        </DialogContent>
-      </Dialog>
     </Box>
   );
 };

@@ -36,11 +36,9 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import StarIcon from "@mui/icons-material/Star";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 
 // Custom hook for vendor dashboard
 import useVendorDashboard from "../../../hooks/useVendorDashboard";
-import useVendorChat from "../../../hooks/useVendorChat";
 
 // Styled components
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -79,18 +77,6 @@ const QuickActionButton = styled(Button)(({ theme }) => ({
 const VendorDashboard = () => {
   const navigate = useNavigate();
   const { dashboardData, loading, error, refetch } = useVendorDashboard();
-  const { getTotalUnreadCount, fetchConversations } = useVendorChat();
-  const [unreadMessages, setUnreadMessages] = useState(0);
-
-  // Fetch chat data
-  useEffect(() => {
-    const loadChatData = async () => {
-      await fetchConversations();
-      setUnreadMessages(getTotalUnreadCount());
-    };
-
-    loadChatData();
-  }, [fetchConversations, getTotalUnreadCount]);
 
   const HomeButton = () => {
     return (
@@ -182,7 +168,7 @@ const VendorDashboard = () => {
                 variant="text"
                 size="small"
                 sx={{ mt: 1, p: 0 }}
-                onClick={() => navigate("/bookings")}
+                onClick={() => navigate("/dashboard/bookings")}
               >
                 View Bookings
               </Button>
@@ -213,7 +199,7 @@ const VendorDashboard = () => {
                 variant="text"
                 size="small"
                 sx={{ mt: 1, p: 0 }}
-                onClick={() => navigate("/Vendorpayemnt")}
+                onClick={() => navigate("/dashboard/payments")}
               >
                 View Revenue
               </Button>
@@ -252,24 +238,22 @@ const VendorDashboard = () => {
                 alignItems="center"
               >
                 <Typography color="text.secondary" gutterBottom>
-                  Messages
+                  Services
                 </Typography>
                 <Avatar sx={{ bgcolor: "info.main" }}>
-                  <Badge badgeContent={unreadMessages} color="error" max={99}>
-                    <ChatBubbleOutlineIcon />
-                  </Badge>
+                  <EventIcon />
                 </Avatar>
               </Box>
               <Typography variant="h4" component="div">
-                {unreadMessages}
+                {dashboardData.servicesCount || 0}
               </Typography>
               <Button
                 variant="text"
                 size="small"
                 sx={{ mt: 1, p: 0 }}
-                onClick={() => navigate("/chats")}
+                onClick={() => navigate("/dashboard/Mangeservices")}
               >
-                View Messages
+                Manage Services
               </Button>
             </CardContent>
           </MetricCard>
@@ -326,7 +310,7 @@ const VendorDashboard = () => {
               <Button
                 variant="text"
                 color="primary"
-                onClick={() => navigate("/bookings")}
+                onClick={() => navigate("/dashboard/bookings")}
               >
                 View All Bookings
               </Button>
@@ -349,28 +333,6 @@ const VendorDashboard = () => {
               <List>
                 <ListItem divider>
                   <ListItemIcon>
-                    <Badge badgeContent={unreadMessages} color="error" max={99}>
-                      <ChatBubbleOutlineIcon color="primary" />
-                    </Badge>
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Messages"
-                    secondary={`${unreadMessages || 0} unread message${
-                      unreadMessages !== 1 ? "s" : ""
-                    }`}
-                  />
-                  <Button
-                    size="small"
-                    variant="contained"
-                    color="primary"
-                    onClick={() => navigate("/chats")}
-                  >
-                    View Chats
-                  </Button>
-                </ListItem>
-
-                <ListItem divider>
-                  <ListItemIcon>
                     <TaskIcon color="warning" />
                   </ListItemIcon>
                   <ListItemText
@@ -383,7 +345,9 @@ const VendorDashboard = () => {
                     size="small"
                     variant="contained"
                     color="primary"
-                    onClick={() => navigate("/bookings?filter=PENDING")}
+                    onClick={() =>
+                      navigate("/dashboard/bookings?filter=PENDING")
+                    }
                   >
                     Manage Bookings
                   </Button>
@@ -403,7 +367,7 @@ const VendorDashboard = () => {
                     size="small"
                     variant="contained"
                     color="primary"
-                    onClick={() => navigate("/Mangeservices")}
+                    onClick={() => navigate("/dashboard/Mangeservices")}
                   >
                     Manage Services
                   </Button>
