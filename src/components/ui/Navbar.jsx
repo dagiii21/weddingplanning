@@ -10,27 +10,19 @@ const Navbar = () => {
   const [userRole, setUserRole] = useState(null);
 
   // Resources for different roles
-  const adminResources = [
-    { name: "Dashboard", url: "/dashboard" },
-  ];
+  const adminResources = [{ name: "Dashboard", url: "/dashboard" }];
 
-  const eventPlannerResources = [
-    { name: "Dashboard", url: "/dashboard" },
-  ];
+  const eventPlannerResources = [{ name: "Dashboard", url: "/dashboard" }];
 
-  const vendorResources = [
-    { name: "Dashboard", url: "/dashboard" },
-  ];
+  const vendorResources = [{ name: "Dashboard", url: "/dashboard" }];
 
-  const userResources = [
-    { name: "Dashboard", url: "/dashboard" },
-  ];
+  const userResources = [{ name: "Dashboard", url: "/dashboard" }];
 
   const AddtionalItems = {
-    'admin': adminResources,
-    'event-planner': eventPlannerResources,
-    'vendor': vendorResources,
-    'user': userResources
+    admin: adminResources,
+    "event-planner": eventPlannerResources,
+    vendor: vendorResources,
+    user: userResources,
   };
 
   const handleClick = (e, itemName) => {
@@ -43,11 +35,11 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userRole');
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
     setIsAuthenticated(false);
     setUserRole(null);
-    window.location.href = '/';
+    window.location.href = "/";
   };
 
   const publicNavItems = [
@@ -59,7 +51,7 @@ const Navbar = () => {
   ];
 
   useEffect(() => {
-    const role = localStorage.getItem('userRole');
+    const role = localStorage.getItem("userRole");
     if (role) {
       setIsAuthenticated(true);
       setUserRole(role);
@@ -69,7 +61,7 @@ const Navbar = () => {
   useEffect(() => {
     const checkVisibleItems = () => {
       let items = [...publicNavItems];
-      
+
       if (isAuthenticated && userRole) {
         items = [...items, ...(AddtionalItems[userRole] || [])];
       }
@@ -190,7 +182,7 @@ const Navbar = () => {
                 </button>
                 <button
                   onClick={() => {
-                    window.location.href = "/register";
+                    window.location.href = "/sign-up";
                   }}
                   className="px-5 py-2 rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 transition-all duration-300"
                 >
@@ -273,7 +265,7 @@ const Navbar = () => {
                   className="px-4 py-3 space-y-2"
                 >
                   {isAuthenticated ? (
-                    <button 
+                    <button
                       onClick={handleLogout}
                       className="w-full py-2 rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 transition-all duration-300"
                     >
@@ -282,13 +274,13 @@ const Navbar = () => {
                   ) : (
                     <>
                       <button
-                        onClick={() => window.location.href = "/login"}
+                        onClick={() => (window.location.href = "/login")}
                         className="w-full py-2 rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 transition-all duration-300"
                       >
                         Sign In
                       </button>
                       <button
-                        onClick={() => window.location.href = "/register"}
+                        onClick={() => (window.location.href = "/sign-up")}
                         className="w-full py-2 rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 transition-all duration-300"
                       >
                         Sign Up

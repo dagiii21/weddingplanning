@@ -9,12 +9,18 @@ import {
   Alert,
   AlertTitle,
   Grid,
+  Stack,
 } from "@mui/material";
 import {
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
   Receipt as ReceiptIcon,
   ArrowBack as ArrowBackIcon,
+  ShoppingBasket as ShoppingBasketIcon,
+  Dashboard as DashboardIcon,
+  Explore as ExploreIcon,
+  Refresh as RefreshIcon,
+  ContactSupport as ContactSupportIcon,
 } from "@mui/icons-material";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { clientService } from "../../../../services/api";
@@ -27,46 +33,74 @@ const PaymentStatus = () => {
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [errorDetails, setErrorDetails] = useState(null);
 
   const tx_ref = searchParams.get("tx_ref");
   const paymentId = searchParams.get("payment_id");
 
-  useEffect(() => {
-    if (!tx_ref || !paymentId) {
-      setError("Invalid payment information");
-      setLoading(false);
-      return;
-    }
+  const verifyPaymentStatus = async () => {
+    setLoading(true);
+    setError(null);
+    setErrorDetails(null);
 
-    const verifyPayment = async () => {
-      try {
-        const response = await clientService.verifyPayment({
-          tx_ref,
-          paymentId,
+    try {
+      if (!tx_ref || !paymentId) {
+        setError("Missing payment information in the URL");
+        setErrorDetails({
+          message: "The URL is missing required parameters",
+          tx_ref: tx_ref || "Missing",
+          paymentId: paymentId || "Missing",
         });
-
-        setPaymentDetails(response.data);
-        setStatus(response.data.status);
         setLoading(false);
-
-        // Show toast based on payment status
-        if (response.data.status === "COMPLETED") {
-          toast.success("Payment completed successfully!");
-        } else if (response.data.status === "FAILED") {
-          toast.error("Payment failed. Please try again.");
-        } else {
-          toast.info("Payment is still processing.");
-        }
-      } catch (err) {
-        console.error("Payment verification error:", err);
-        setError(err.response?.data?.message || "Payment verification failed");
-        setStatus("FAILED");
-        setLoading(false);
-        toast.error("Failed to verify payment status");
+        return;
       }
-    };
 
-    verifyPayment();
+      const response = await clientService.verifyPayment({
+        tx_ref,
+        paymentId,
+      });
+
+      setPaymentDetails(response.data);
+      setStatus(response.data.status);
+      setLoading(false);
+
+      // Show toast based on payment status
+      if (response.data.status === "COMPLETED") {
+        toast.success("Payment completed successfully!");
+      } else if (response.data.status === "FAILED") {
+        toast.error("Payment failed. Please try again.");
+      } else {
+        toast.info("Payment is still processing.");
+      }
+    } catch (err) {
+      console.error("Payment verification error:", err);
+
+      const errorMessage =
+        err.response?.data?.message || "Payment verification failed";
+      const statusCode = err.response?.status;
+
+      // Set detailed error information
+      setErrorDetails({
+        message: errorMessage,
+        code: statusCode,
+        tx_ref: tx_ref,
+        paymentId: paymentId,
+        response: err.response?.data || {},
+        timestamp: new Date().toISOString(),
+      });
+
+      setError(`${errorMessage} (Code: ${statusCode || "Unknown"})`);
+      setStatus("FAILED");
+      setLoading(false);
+
+      toast.error(
+        "Failed to verify payment status. Please try again or contact support."
+      );
+    }
+  };
+
+  useEffect(() => {
+    verifyPaymentStatus();
 
     // Poll for payment status updates every 5 seconds if still pending
     const intervalId = setInterval(async () => {
@@ -102,11 +136,32 @@ const PaymentStatus = () => {
   }, [tx_ref, paymentId, status]);
 
   const handleViewPayments = () => {
-    navigate("/dashboard/payment");
+    navigate("/dashboard/payments");
   };
 
   const handleViewBookings = () => {
-    navigate("/dashboard/bookings");
+    navigate("/dashboard/my-bookings");
+  };
+
+  const handleViewDashboard = () => {
+    navigate("/dashboard");
+  };
+
+  const handleBrowseServices = () => {
+    navigate("/dashboard/services");
+  };
+
+  const handleRetryVerification = () => {
+    verifyPaymentStatus();
+  };
+
+  const handleContactSupport = () => {
+    navigate("/dashboard/support", {
+      state: {
+        subject: "Payment Verification Issue",
+        details: errorDetails,
+      },
+    });
   };
 
   if (loading) {
@@ -132,16 +187,71 @@ const PaymentStatus = () => {
     return (
       <Box p={3}>
         <Alert severity="error" sx={{ mb: 3 }}>
-          <AlertTitle>Error</AlertTitle>
+          <AlertTitle>Payment Verification Error</AlertTitle>
           {error}
         </Alert>
-        <Button
-          variant="contained"
-          startIcon={<ArrowBackIcon />}
-          onClick={handleViewPayments}
-        >
-          Back to Payments
-        </Button>
+        <Typography variant="body1" paragraph>
+          We encountered an error while verifying your payment. This does not
+          necessarily mean your payment failed.
+        </Typography>
+        <Typography variant="body1" paragraph>
+          If you've been charged, your payment may still be processing. You can
+          try to verify again or check your payment history.
+        </Typography>
+
+        <Box display="flex" flexWrap="wrap" gap={2} mt={3}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<RefreshIcon />}
+            onClick={handleRetryVerification}
+          >
+            Try Again
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<ReceiptIcon />}
+            onClick={handleViewPayments}
+          >
+            Check Payment History
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<DashboardIcon />}
+            onClick={handleViewDashboard}
+          >
+            Return to Dashboard
+          </Button>
+        </Box>
+
+        {errorDetails && (
+          <Alert severity="info" sx={{ mt: 4 }}>
+            <AlertTitle>Technical Details</AlertTitle>
+            <Typography variant="body2" component="div">
+              <pre style={{ whiteSpace: "pre-wrap", fontSize: "0.8rem" }}>
+                {JSON.stringify(
+                  {
+                    tx_ref: errorDetails.tx_ref,
+                    paymentId: errorDetails.paymentId,
+                    timestamp: errorDetails.timestamp,
+                  },
+                  null,
+                  2
+                )}
+              </pre>
+            </Typography>
+            <Box mt={2}>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<ContactSupportIcon />}
+                onClick={handleContactSupport}
+              >
+                Contact Support
+              </Button>
+            </Box>
+          </Alert>
+        )}
       </Box>
     );
   }
@@ -163,6 +273,13 @@ const PaymentStatus = () => {
             <Typography variant="body1" paragraph>
               Your payment has been processed successfully. The vendor has been
               notified.
+            </Typography>
+            <Typography
+              variant="body1"
+              paragraph
+              sx={{ fontWeight: "medium", mt: 2 }}
+            >
+              Would you like to explore more services for your wedding?
             </Typography>
           </Box>
         ) : status === "PENDING" ? (
@@ -195,6 +312,13 @@ const PaymentStatus = () => {
             <Typography variant="body1" paragraph>
               We couldn't process your payment. Please try again or contact
               support if the issue persists.
+            </Typography>
+            <Typography
+              variant="body1"
+              paragraph
+              sx={{ fontWeight: "medium", mt: 2 }}
+            >
+              You can return to your dashboard and try again later.
             </Typography>
           </Box>
         )}
@@ -253,21 +377,66 @@ const PaymentStatus = () => {
           </Box>
         )}
 
-        <Box display="flex" justifyContent="center" gap={2} mt={3}>
-          <Button
-            variant="outlined"
-            startIcon={<ArrowBackIcon />}
-            onClick={handleViewPayments}
-          >
-            Payment History
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<ReceiptIcon />}
-            onClick={handleViewBookings}
-          >
-            View Bookings
-          </Button>
+        <Divider sx={{ my: 3 }} />
+
+        <Box display="flex" justifyContent="center" flexWrap="wrap" gap={2}>
+          {status === "COMPLETED" ? (
+            <>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<ExploreIcon />}
+                onClick={handleBrowseServices}
+                sx={{ minWidth: "200px" }}
+              >
+                Browse More Services
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<ReceiptIcon />}
+                onClick={handleViewPayments}
+                sx={{ minWidth: "200px" }}
+              >
+                View Payment History
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<DashboardIcon />}
+                onClick={handleViewDashboard}
+                sx={{ minWidth: "200px" }}
+              >
+                Go to Dashboard
+              </Button>
+            </>
+          ) : status === "FAILED" ? (
+            <>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<DashboardIcon />}
+                onClick={handleViewDashboard}
+                sx={{ minWidth: "200px" }}
+              >
+                Return to Dashboard
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<ReceiptIcon />}
+                onClick={handleViewPayments}
+                sx={{ minWidth: "200px" }}
+              >
+                View Payment History
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="outlined"
+              startIcon={<ArrowBackIcon />}
+              onClick={handleViewDashboard}
+            >
+              Back to Dashboard
+            </Button>
+          )}
         </Box>
       </Paper>
     </Box>

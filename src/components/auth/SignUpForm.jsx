@@ -1,7 +1,7 @@
-import React from 'react';
-import useSignUpForm from '../../hooks/useSignUpForm';
-import Button from '../ui/Button';
-import PhoneInput from '../ui/PhoneInput';
+import React from "react";
+import useSignUpForm from "../../hooks/useSignUpForm";
+import Button from "../ui/Button";
+import PhoneInput from "../ui/PhoneInput";
 
 const SignUpForm = () => {
   const {
@@ -10,22 +10,24 @@ const SignUpForm = () => {
     isSubmitting,
     isSuccess,
     handleChange,
-    handleSubmit
+    handleSubmit,
   } = useSignUpForm();
 
   return (
     <>
       {isSuccess && (
-        
         <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
           Account created successfully! You can now sign in.
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* First Name Field */}
         <div>
-          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="firstName"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             First Name
           </label>
           <input
@@ -35,7 +37,11 @@ const SignUpForm = () => {
             value={formData.firstName}
             onChange={handleChange}
             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-colors
-                      ${errors.firstName ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-purple-200 focus:border-purple-400'}`}
+                      ${
+                        errors.firstName
+                          ? "border-red-500 focus:ring-red-200"
+                          : "border-gray-300 focus:ring-purple-200 focus:border-purple-400"
+                      }`}
             placeholder="Enter your first name"
           />
           {errors.firstName && (
@@ -45,7 +51,10 @@ const SignUpForm = () => {
 
         {/* Last Name Field */}
         <div>
-          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="lastName"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Last Name
           </label>
           <input
@@ -55,7 +64,11 @@ const SignUpForm = () => {
             value={formData.lastName}
             onChange={handleChange}
             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-colors
-                      ${errors.lastName ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-purple-200 focus:border-purple-400'}`}
+                      ${
+                        errors.lastName
+                          ? "border-red-500 focus:ring-red-200"
+                          : "border-gray-300 focus:ring-purple-200 focus:border-purple-400"
+                      }`}
             placeholder="Enter your last name"
           />
           {errors.lastName && (
@@ -65,7 +78,10 @@ const SignUpForm = () => {
 
         {/* Email Field */}
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Email Address
           </label>
           <input
@@ -75,7 +91,11 @@ const SignUpForm = () => {
             value={formData.email}
             onChange={handleChange}
             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-colors
-                      ${errors.email ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-purple-200 focus:border-purple-400'}`}
+                      ${
+                        errors.email
+                          ? "border-red-500 focus:ring-red-200"
+                          : "border-gray-300 focus:ring-purple-200 focus:border-purple-400"
+                      }`}
             placeholder="Enter your email"
           />
           {errors.email && (
@@ -91,9 +111,128 @@ const SignUpForm = () => {
           name="phone"
         />
 
+        {/* User Role Selection */}
+        <div>
+          <label
+            htmlFor="role"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            I want to register as
+          </label>
+          <div className="grid grid-cols-2 gap-4">
+            <div
+              className={`border p-4 rounded-lg cursor-pointer text-center transition-colors
+                ${
+                  formData.role === "CLIENT"
+                    ? "bg-purple-100 border-purple-500"
+                    : "border-gray-300 hover:bg-gray-50"
+                }`}
+              onClick={() =>
+                handleChange({ target: { name: "role", value: "CLIENT" } })
+              }
+            >
+              <span className="text-md font-medium">Client</span>
+              <p className="text-xs text-gray-600 mt-1">
+                Book services for your events
+              </p>
+            </div>
+
+            <div
+              className={`border p-4 rounded-lg cursor-pointer text-center transition-colors
+                ${
+                  formData.role === "VENDOR"
+                    ? "bg-purple-100 border-purple-500"
+                    : "border-gray-300 hover:bg-gray-50"
+                }`}
+              onClick={() =>
+                handleChange({ target: { name: "role", value: "VENDOR" } })
+              }
+            >
+              <span className="text-md font-medium">Vendor</span>
+              <p className="text-xs text-gray-600 mt-1">
+                Offer services for events
+              </p>
+            </div>
+          </div>
+          {errors.role && (
+            <p className="mt-1 text-sm text-red-600">{errors.role}</p>
+          )}
+        </div>
+
+        {/* Business Information Fields (only shown when role is VENDOR) */}
+        {formData.role === "VENDOR" && (
+          <>
+            <div>
+              <label
+                htmlFor="businessName"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Business Name
+              </label>
+              <input
+                id="businessName"
+                name="businessName"
+                type="text"
+                value={formData.businessName || ""}
+                onChange={handleChange}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-colors
+                          ${
+                            errors.businessName
+                              ? "border-red-500 focus:ring-red-200"
+                              : "border-gray-300 focus:ring-purple-200 focus:border-purple-400"
+                          }`}
+                placeholder="Enter your business name"
+              />
+              {errors.businessName && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.businessName}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label
+                htmlFor="serviceType"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Service Type
+              </label>
+              <select
+                id="serviceType"
+                name="serviceType"
+                value={formData.serviceType || ""}
+                onChange={handleChange}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-colors
+                          ${
+                            errors.serviceType
+                              ? "border-red-500 focus:ring-red-200"
+                              : "border-gray-300 focus:ring-purple-200 focus:border-purple-400"
+                          }`}
+              >
+                <option value="">Select service type</option>
+                <option value="Venue">Venue</option>
+                <option value="Catering">Catering</option>
+                <option value="Photography">Photography</option>
+                <option value="Decoration">Decoration</option>
+                <option value="Music">Music & Entertainment</option>
+                <option value="Transportation">Transportation</option>
+                <option value="Other">Other</option>
+              </select>
+              {errors.serviceType && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.serviceType}
+                </p>
+              )}
+            </div>
+          </>
+        )}
+
         {/* Password Field */}
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Password
           </label>
           <input
@@ -103,7 +242,11 @@ const SignUpForm = () => {
             value={formData.password}
             onChange={handleChange}
             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-colors
-                      ${errors.password ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-purple-200 focus:border-purple-400'}`}
+                      ${
+                        errors.password
+                          ? "border-red-500 focus:ring-red-200"
+                          : "border-gray-300 focus:ring-purple-200 focus:border-purple-400"
+                      }`}
             placeholder="Create a password"
           />
           {errors.password && (
@@ -113,7 +256,10 @@ const SignUpForm = () => {
 
         {/* Confirm Password Field */}
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="confirmPassword"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Confirm Password
           </label>
           <input
@@ -123,11 +269,17 @@ const SignUpForm = () => {
             value={formData.confirmPassword}
             onChange={handleChange}
             className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-colors
-                      ${errors.confirmPassword ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-purple-200 focus:border-purple-400'}`}
+                      ${
+                        errors.confirmPassword
+                          ? "border-red-500 focus:ring-red-200"
+                          : "border-gray-300 focus:ring-purple-200 focus:border-purple-400"
+                      }`}
             placeholder="Confirm your password"
           />
           {errors.confirmPassword && (
-            <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+            <p className="mt-1 text-sm text-red-600">
+              {errors.confirmPassword}
+            </p>
           )}
         </div>
 
@@ -145,16 +297,13 @@ const SignUpForm = () => {
         <div className="text-center mt-4">
           <p className="text-sm text-gray-600">
             Already have an account?{" "}
-            <a href="/login" className="text-purple-600 hover:text-purple-800 font-medium">
+            <a
+              href="/login"
+              className="text-purple-600 hover:text-purple-800 font-medium"
+            >
               Sign In
             </a>
           </p>
-          <p className="text-sm text-gray-600">
-              Want to become a vendor?{" "}
-              <a href="/register-vendor" className="text-purple-600 hover:text-purple-800 font-medium">
-                Register as Vendor
-              </a>
-            </p>
         </div>
       </form>
     </>

@@ -25,42 +25,39 @@ function App() {
     <CartProvider>
       <BrowserRouter>
         {/* Global Toast Container */}
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
-
-      <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/about-us" element={<Aboutuspage />} />
-        <Route path="/Testimonal" element={<Testimonialpage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/sign-up" element={<SignUp />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register-vendor" element={<SignUp />} />
-        <Route path="/services/*" element={<DetailsPage />} />
-        <Route path="/vendor/:id" element={<Vendor/>} />
-
-        {/* Protected route example*/}
-        <Route
-          path="/dashboard/*"
-          element={
-            <Dashboard />
-           
-          }
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
         />
 
-        {/* Catch all route - redirects to homepage or 404page */}
-        {/* <Route path="*" element={<Page404 />} /> */}
-      </Routes>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/about-us" element={<Aboutuspage />} />
+          <Route path="/Testimonal" element={<Testimonialpage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/sign-up" element={<SignUp />} />
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/register-vendor"
+            element={<Navigate to="/sign-up" replace />}
+          />
+          <Route path="/services/*" element={<DetailsPage />} />
+          <Route path="/vendor/:id" element={<Vendor />} />
+
+          {/* Protected route example*/}
+          <Route path="/dashboard/*" element={<Dashboard />} />
+
+          {/* Catch all route - redirects to 404 page */}
+          <Route path="*" element={<Page404 />} />
+        </Routes>
       </BrowserRouter>
     </CartProvider>
   );
