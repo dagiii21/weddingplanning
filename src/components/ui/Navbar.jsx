@@ -72,10 +72,6 @@ const Navbar = () => {
       
       if (isAuthenticated && userRole) {
         items = [...items, ...(AddtionalItems[userRole] || [])];
-      } else {
-        items = [...items, 
-          { name: "Sign Up", url: "/sign-up" }
-        ];
       }
 
       const filteredItems = items
@@ -126,14 +122,14 @@ const Navbar = () => {
 
   return (
     <motion.nav
-      initial="hidden"
       animate="visible"
       variants={navbarVariants}
+      initial="hidden"
       className={`fixed w-full z-20 transition-all duration-300 backdrop-blur-sm ${
         isScrolled ? "bg-white/95 py-2 shadow-md" : "bg-white/85 py-4"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           {/* Logo */}
           <motion.div
@@ -149,8 +145,8 @@ const Navbar = () => {
             />
           </motion.div>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:block">
+          {/* Desktop Menu - Centered */}
+          <div className="hidden md:flex justify-center flex-1">
             <ul className="flex items-center space-x-6">
               {visibleItems.map((item, index) => (
                 <motion.li
@@ -170,20 +166,38 @@ const Navbar = () => {
                   </a>
                 </motion.li>
               ))}
-              {isAuthenticated ? (
-                <Button
-                  text="Logout"
-                  onClick={handleLogout}
-                />
-              ) : (
-                <Button
-                  text="Login"
+            </ul>
+          </div>
+
+          {/* Auth Buttons */}
+          <div className="hidden md:flex items-center space-x-4">
+            {isAuthenticated ? (
+              <button
+                onClick={handleLogout}
+                className="px-5 py-2 rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 transition-all duration-300"
+              >
+                Logout
+              </button>
+            ) : (
+              <>
+                <button
                   onClick={() => {
                     window.location.href = "/login";
                   }}
-                />
-              )}
-            </ul>
+                  className="px-5 py-2 rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 transition-all duration-300"
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => {
+                    window.location.href = "/register";
+                  }}
+                  className="px-5 py-2 rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 transition-all duration-300"
+                >
+                  Sign Up
+                </button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -256,12 +270,30 @@ const Navbar = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: visibleItems.length * 0.05 }}
-                  className="px-4 py-3"
+                  className="px-4 py-3 space-y-2"
                 >
                   {isAuthenticated ? (
-                    <Button text="Logout" onClick={handleLogout} fullWidth={true} />
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full py-2 rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 transition-all duration-300"
+                    >
+                      Logout
+                    </button>
                   ) : (
-                    <Button text="Login" onClick={() => window.location.href = "/login"} fullWidth={true} />
+                    <>
+                      <button
+                        onClick={() => window.location.href = "/login"}
+                        className="w-full py-2 rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 transition-all duration-300"
+                      >
+                        Sign In
+                      </button>
+                      <button
+                        onClick={() => window.location.href = "/register"}
+                        className="w-full py-2 rounded-md text-white bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 transition-all duration-300"
+                      >
+                        Sign Up
+                      </button>
+                    </>
                   )}
                 </motion.div>
               </div>
