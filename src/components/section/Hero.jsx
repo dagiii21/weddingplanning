@@ -87,7 +87,7 @@ const Hero = () => {
 
           {/* Hero Title - Larger and more elegant */}
           <h1 
-            className={`text-3xl md:text-4xl lg:text-5xl text-white font-light tracking-tight mb-4 leading-tight
+            className={`text-3xl md:text-2xl lg:text-3xl text-white font-light tracking-tight mb-4 leading-tight
                        transition-all duration-1000 ease-out
                        ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
             style={{ textShadow: '0 2px 15px rgba(0, 0, 0, 0.8)' }}
@@ -108,7 +108,7 @@ const Hero = () => {
 
           {/* Subtitle - Using light pink theme color */}
           <p 
-            className={`text-xl md:text-2xl lg:text-3xl text-[#ffccf9] font-light leading-relaxed mb-8
+            className={`text-xl md:text-xl lg:text-2xl text-[#ffccf9] font-light leading-relaxed mb-4
                         transition-all duration-1000 delay-300 ease-out 
                         ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
             style={{ textShadow: '0 1px 8px rgba(0, 0, 0, 0.7)' }}
@@ -162,15 +162,13 @@ const Hero = () => {
                        ${isVisible ? 'opacity-80 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <button 
             onClick={scrollToNextSection}
-            className="flex flex-col items-center justify-center text-[#ffccf9] hover:text-white transition-colors duration-300"
+            className="flex flex-col items-center hidden lg:block mt-4 justify-center text-[#ffccf9] hover:text-white transition-colors duration-300"
             aria-label="Scroll to next section"
-          >
-            <span className="text-base mb-3 font-light">Explore Our Services</span>
-            <div className="w-12 h-12 rounded-full border-2 border-[#ffccf9] hover:border-[#c27bff] 
+          >            <div className="w-10 h-10 rounded-full border-2 border-[#ffccf9] hover:border-[#c27bff] 
                          flex items-center justify-center hover:bg-[#c27bff]/30 transition-all duration-300
                          relative overflow-hidden">
               {/* Subtle Habesha pattern in the button */}
-              <div className="absolute inset-0 opacity-20" style={{ backgroundImage: `url(${habeshaPatternSvg})` }}></div>
+              <div className="absolute inset-0 opacity-20 " style={{ backgroundImage: `url(${habeshaPatternSvg})` }}></div>
               <svg 
                 className="w-6 h-6 animate-bounce relative z-10" 
                 fill="none" 
