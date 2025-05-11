@@ -5,8 +5,10 @@
  * Uses environment variables for deployment flexibility.
  */
 
+import { API_BASE_URL } from "./env";
+
 // Base API URL
-export const API_URL = "http://localhost:5000/api";
+export const API_URL = API_BASE_URL;
 
 /**
  * Endpoint Definitions

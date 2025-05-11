@@ -1,4 +1,46 @@
-# React + Vite
+# Wedding Planning Platform
+
+## Environment Setup
+
+This project uses environment variables for configuration. Create an `.env` file in the root directory with the following variables:
+
+```
+# API Configuration
+VITE_API_BASE_URL=http://localhost:5000/api
+VITE_API_DOMAIN=http://localhost:5000
+VITE_FRONTEND_URL=http://localhost:5173
+```
+
+For production deployment, create a `.env.production` file:
+
+```
+# API Configuration
+VITE_API_BASE_URL=https://your-backend-url.com/api
+VITE_API_DOMAIN=https://your-backend-url.com
+VITE_FRONTEND_URL=https://weddingplanning-1-joi4.onrender.com
+```
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+## Building for Production
+
+```bash
+# Build the project
+npm run build
+
+# Preview the production build
+npm run preview
+```
+
+## React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

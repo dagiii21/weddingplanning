@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Title, useNotify } from "react-admin";
+import { API_BASE_URL } from "../../../../config/env";
 import {
   Box,
   Button,
@@ -340,7 +341,7 @@ const VendorDetailsDialog = ({ open, onClose, vendorId }) => {
   useEffect(() => {
     if (vendorId && open) {
       setLoading(true);
-      fetch(`http://localhost:5000/api/eventplanner/vendors/${vendorId}`, {
+      fetch(`${API_BASE_URL}/eventplanner/vendors/${vendorId}`, {
         headers: {
           Authorization: `Bearer ${
             localStorage.getItem("token") || sessionStorage.getItem("token")
@@ -530,11 +531,11 @@ const VendorListCustom = () => {
 
       console.log(
         "Fetching vendors with URL:",
-        `http://localhost:5000/api/eventplanner/vendors?${queryParams}`
+        `${API_BASE_URL}/eventplanner/vendors?${queryParams}`
       );
 
       const response = await fetch(
-        `http://localhost:5000/api/eventplanner/vendors?${queryParams}`,
+        `${API_BASE_URL}/eventplanner/vendors?${queryParams}`,
         {
           headers: {
             Authorization: `Bearer ${

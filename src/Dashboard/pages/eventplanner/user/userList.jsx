@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { API_BASE_URL } from "../../../../config/env";
 import {
   List,
   Datagrid,
@@ -162,7 +163,7 @@ const ClientDetailModal = ({ open, onClose, clientId }) => {
 
       // Direct API call using the eventPlannerService instead of dataProvider
       // This avoids the format issues with React Admin dataProvider
-      fetch(`http://localhost:5000/api/eventplanner/clients/${clientId}`, {
+      fetch(`${API_BASE_URL}/eventplanner/clients/${clientId}`, {
         headers: {
           Authorization: `Bearer ${
             localStorage.getItem("token") || sessionStorage.getItem("token")

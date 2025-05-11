@@ -1,6 +1,7 @@
 import { fetchUtils } from "react-admin";
+import { API_BASE_URL } from "../../config/env";
 
-const apiUrl = "http://localhost:5000/api";
+const apiUrl = API_BASE_URL;
 const httpClient = fetchUtils.fetchJson;
 
 // Helper to get the appropriate API path based on resource and user role

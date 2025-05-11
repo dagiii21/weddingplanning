@@ -60,6 +60,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { eventPlannerService } from "../../../../services/api";
+import { API_BASE_URL } from "../../../../config/env";
 
 // Filter component for searching vendors
 const VendorFilter = (props) => (
@@ -382,7 +383,7 @@ const VendorDetailsDialog = ({ open, onClose, vendorId }) => {
   useEffect(() => {
     if (vendorId && open) {
       setLoading(true);
-      fetch(`http://localhost:5000/api/eventplanner/vendors/${vendorId}`, {
+      fetch(`${API_BASE_URL}/eventplanner/vendors/${vendorId}`, {
         headers: {
           Authorization: `Bearer ${
             localStorage.getItem("token") || sessionStorage.getItem("token")
@@ -571,7 +572,7 @@ const VendorListOne = () => {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/eventplanner/vendors?${queryParams}`,
+        `${API_BASE_URL}/eventplanner/vendors?${queryParams}`,
         {
           headers: {
             Authorization: `Bearer ${
