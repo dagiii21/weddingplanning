@@ -41,7 +41,7 @@ import ServiceEdit from "../pages/vendor/manageServices/ServiceEdit";
 import ServiceList from "../pages/vendor/manageServices/ServiceList";
 
 // Import user services component
-import UserServiceList from "../pages/user/Services/ServiceList";
+import UserServiceList from "../pages/user/services/ServiceList";
 
 import userCreate from "../pages/admin/user/userCreate";
 import userEdit from "../pages/admin/user/userEdit";
