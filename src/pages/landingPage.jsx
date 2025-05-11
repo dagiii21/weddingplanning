@@ -13,7 +13,7 @@ function landingPage() {
       <Hero />
       <AboutUs />
       <ServicesSection />
-      <TestimonialsSection />
+      {/* <TestimonialsSection /> */}
       <Footer />
     </div>
   );
