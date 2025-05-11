@@ -5,9 +5,8 @@
  * Uses environment variables for deployment flexibility.
  */
 
-// Base API URL - Configured via environment variable with fallback
-export const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+// Base API URL
+export const API_URL = "http://localhost:5000/api";
 
 /**
  * Endpoint Definitions
@@ -20,21 +19,20 @@ export const ENDPOINTS = {
   AUTH: {
     LOGIN: "/auth/login",
     REGISTER: "/auth/register",
-    VALIDATE_TOKEN: "/auth/validate",
+    VALIDATE_TOKEN: "/auth/validate-token",
   },
 
   // User management endpoints
   USER: {
-    PROFILE: "/users/profile",
-    UPDATE: "/users/profile",
+    PROFILE: "/user/profile",
+    UPDATE: "/user/update",
   },
 
   // Vendor-specific endpoints
   VENDOR: {
-    REGISTER: "/vendors/register",
+    REGISTER: "/vendor/register",
     SERVICES: "/vendor/services",
     DASHBOARD: "/vendor/dashboard/overview",
-    BOOKINGS: "/vendor/bookings",
     CONVERSATIONS: "/vendor/conversations",
     PAYMENTS: "/vendor/payment",
     ACCOUNT_PROFILE: "/vendor/account/profile",
@@ -43,7 +41,7 @@ export const ENDPOINTS = {
 
   // Dashboard endpoints
   DASHBOARD: {
-    USER_STATS: "/dashboard/stats",
+    USER_STATS: "/dashboard/user-stats",
     BOOKINGS: "/dashboard/bookings",
     EVENTS: "/dashboard/events",
     NOTIFICATIONS: "/dashboard/notifications",
@@ -54,12 +52,25 @@ export const ENDPOINTS = {
     DASHBOARD: "/client/dashboard",
     BOOKINGS: "/client/bookings",
     PAYMENTS: "/client/payment",
-    PAYMENT_INITIATE: "/client/payment/initiate",
     ACCOUNT_UPDATE: "/client/account/:id",
     PROFILE: "/client/account/profile",
     SERVICES: "/client/services",
     CREATE_BOOKING: "/client/bookings",
+    PAYMENT_INITIATE: "/client/payment/initiate",
     CONVERSATIONS: "/client/conversations",
-    START_CONVERSATION: "/client/conversation",
+    START_CONVERSATION: "/client/conversations",
+  },
+
+  // Admin endpoints
+  ADMIN: {
+    DASHBOARD: "/admin/dashboard",
+    USERS: "/admin/users",
+    VENDORS: "/admin/vendors",
+    BOOKINGS: "/admin/bookings",
+    PAYMENTS: "/admin/payments",
+    FEEDBACK: "/admin/feedback",
   },
 };
+
+// Export a function to get a full URL for a given endpoint
+export const getApiUrl = (endpoint) => `${API_URL}${endpoint}`;

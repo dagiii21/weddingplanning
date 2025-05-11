@@ -25,9 +25,8 @@ import {
   Tabs,
   CircularProgress,
   Alert,
-  Avatar,
 } from "@mui/material";
-import { adminService } from "../../../../services/api";
+import { eventPlannerService } from "../../../../services/api";
 
 const AccountEditToolbar = (props) => {
   return (
@@ -67,7 +66,7 @@ const validatePhone = (value) => {
   return undefined;
 };
 
-const PasswordEdit = () => {
+const AccountEdit = () => {
   const notify = useNotify();
   const redirect = useRedirect();
   const { identity, isLoading: identityLoading } = useGetIdentity();
@@ -81,7 +80,7 @@ const PasswordEdit = () => {
     lastName: "",
     phone: "",
     avatar: null,
-    role: "",
+    bio: "",
   });
 
   // Fetch user profile data from the API
@@ -89,10 +88,8 @@ const PasswordEdit = () => {
     const fetchUserProfile = async () => {
       setFetchLoading(true);
       try {
-        console.log("Fetching admin profile from /user/profile endpoint...");
-        const response = await adminService.getProfile();
-        console.log("Admin profile response:", response);
-        const profile = response.data.profile || response.data;
+        const response = await eventPlannerService.getProfile();
+        const { profile } = response.data;
 
         // Update profile data with real values from the API
         setProfileData({
@@ -102,21 +99,14 @@ const PasswordEdit = () => {
           lastName: profile.lastName || "",
           phone: profile.phone || "",
           avatar: profile.avatar,
-          role: profile.role || "ADMIN",
+          bio: profile.bio || "",
         });
-        console.log("Profile data set successfully:", profile);
 
         setFetchError(null);
       } catch (error) {
         console.error("Error fetching user profile:", error);
-        setFetchError(
-          `Failed to load your profile: ${
-            error.message || "Unknown error"
-          }. Check that the /user/profile endpoint is available.`
-        );
-        notify(`Error loading profile data: ${error.message}`, {
-          type: "error",
-        });
+        setFetchError("Failed to load your profile. Please try again later.");
+        notify("Error loading profile data", { type: "error" });
       } finally {
         setFetchLoading(false);
       }
@@ -149,21 +139,23 @@ const PasswordEdit = () => {
         throw new Error("User ID not found");
       }
 
-      const response = await adminService.updateAccount(userId, updateData);
+      const response = await eventPlannerService.updateAccount(
+        userId,
+        updateData
+      );
 
       notify("Account updated successfully", { type: "success" });
 
       // Refresh the profile data
-      const profileResponse = await adminService.getProfile();
-      const profile = profileResponse.data.profile || profileResponse.data;
+      const profileResponse = await eventPlannerService.getProfile();
       setProfileData({
-        id: profile.id || "",
-        email: profile.email || "",
-        firstName: profile.firstName || "",
-        lastName: profile.lastName || "",
-        phone: profile.phone || "",
-        avatar: profile.avatar,
-        role: profile.role || "ADMIN",
+        id: profileResponse.data.profile.id || "",
+        email: profileResponse.data.profile.email || "",
+        firstName: profileResponse.data.profile.firstName || "",
+        lastName: profileResponse.data.profile.lastName || "",
+        phone: profileResponse.data.profile.phone || "",
+        avatar: profileResponse.data.profile.avatar,
+        bio: profileResponse.data.profile.bio || "",
       });
     } catch (error) {
       console.error("Error updating account:", error);
@@ -205,6 +197,7 @@ const PasswordEdit = () => {
     firstName: profileData.firstName,
     lastName: profileData.lastName,
     phone: profileData.phone || "",
+    bio: profileData.bio || "",
     password: "",
     confirmPassword: "",
   };
@@ -215,36 +208,12 @@ const PasswordEdit = () => {
       <Card>
         <CardContent>
           <Typography variant="h5" gutterBottom>
-            Administrator Account Information
+            Event Planner Account Information
           </Typography>
           <Typography variant="body2" color="textSecondary" paragraph>
             Update your personal information and password below.
           </Typography>
           <Divider sx={{ my: 2 }} />
-
-          {/* Admin profile summary */}
-          <Box sx={{ mb: 4 }}>
-            <Grid container spacing={2} alignItems="center">
-              <Grid item>
-                <Avatar
-                  src={profileData.avatar}
-                  alt={profileData.firstName}
-                  sx={{ width: 80, height: 80 }}
-                />
-              </Grid>
-              <Grid item xs>
-                <Typography variant="h5">
-                  {profileData.firstName} {profileData.lastName}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  {profileData.email}
-                </Typography>
-                <Typography variant="body2" color="primary.main">
-                  Administrator
-                </Typography>
-              </Grid>
-            </Grid>
-          </Box>
 
           <TabbedForm
             toolbar={<AccountEditToolbar />}
@@ -294,6 +263,16 @@ const PasswordEdit = () => {
                       helperText={`Current: ${profileData.phone || "Not set"}`}
                     />
                   </Grid>
+                  <Grid item xs={12}>
+                    <TextInput
+                      source="bio"
+                      label="Professional Bio"
+                      fullWidth
+                      multiline
+                      rows={4}
+                      helperText={`Current: ${profileData.bio || "Not set"}`}
+                    />
+                  </Grid>
                 </Grid>
               </Box>
             </FormTab>
@@ -332,4 +311,4 @@ const PasswordEdit = () => {
   );
 };
 
-export default PasswordEdit;
+export default AccountEdit;

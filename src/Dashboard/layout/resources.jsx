@@ -27,6 +27,7 @@ import EventPlannerShow from "../pages/admin/EventPlanner/EventPlannerShow";
 import AdminPasswordEdit from "../pages/admin/Password/PasswordEdit";
 import AccountEdit from "../pages/user/Password/AccountEdit";
 import eventplannerPasswordEdit from "../pages/eventplanner/Password/PasswordEdit";
+import EventPlannerAccountEdit from "../pages/eventplanner/Password/AccountEdit";
 import vendorAccountSettings from "../pages/vendor/Account/AccountSettings";
 
 // Import Vendor components
@@ -34,6 +35,7 @@ import VendorList from "../pages/admin/Vendor/VendorList";
 import VendorEdit from "../pages/admin/Vendor/VendorEdit";
 import VendorCreate from "../pages/admin/Vendor/VendorCreate";
 import VendorShow from "../pages/admin/Vendor/VendorShow";
+import VendorListCustom from "../pages/admin/Vendor/VendorListCustom";
 
 // Import Events components
 import ServiceCreate from "../pages/vendor/manageServices/ServiceCreate";
@@ -63,6 +65,8 @@ import BookingDetail from "../pages/vendor/bookings/BookingDetail";
 // Import our new payment dashboard component
 import PaymentDashboard from "../pages/vendor/payment/PaymentDashboard";
 
+console.log("Loading resources.jsx");
+
 export const adminResources = [
   {
     name: "dashboard",
@@ -83,7 +87,7 @@ export const adminResources = [
     name: "vendor",
     label: "Vendor",
     icon: VendorIcon,
-    list: VendorList,
+    list: VendorListCustom,
     edit: VendorEdit,
     create: VendorCreate,
     show: VendorShow,
@@ -110,7 +114,7 @@ export const adminResources = [
   },
   {
     name: "password",
-    label: "Password",
+    label: "Account Settings",
     icon: PasswordIcon,
     list: AdminPasswordEdit,
   },
@@ -128,7 +132,7 @@ export const eventPlannerResources = [
     name: "vendor",
     label: "Vendor",
     icon: VendorIcon,
-    list: VendorListOne,
+    list: VendorListCustom,
   },
   {
     name: "user",
@@ -149,10 +153,10 @@ export const eventPlannerResources = [
     list: payemntListOne,
   },
   {
-    name: "password",
-    label: "Password",
+    name: "account",
+    label: "Account Settings",
     icon: PasswordIcon,
-    list: eventplannerPasswordEdit,
+    list: EventPlannerAccountEdit,
   },
 ];
 

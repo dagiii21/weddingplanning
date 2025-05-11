@@ -1,21 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  TextField,
-  EmailField,
-  DateField,
-  BooleanField,
-  EditButton,
-  ShowButton,
-  useRecordContext,
-  useNotify,
-  useRefresh,
-  SelectInput,
-  TextInput,
-  Filter,
-  FunctionField,
-  Confirm,
-  Title,
-} from "react-admin";
+import { Title, useNotify } from "react-admin";
 import {
   Box,
   Button,
@@ -47,45 +31,19 @@ import {
   TablePagination,
   CircularProgress,
   Stack,
-  Divider,
   Container,
 } from "@mui/material";
 import BlockIcon from "@mui/icons-material/Block";
 import ReportIcon from "@mui/icons-material/Report";
 import EditIcon from "@mui/icons-material/Edit";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import CancelIcon from "@mui/icons-material/Cancel";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import SearchIcon from "@mui/icons-material/Search";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import FilterListIcon from "@mui/icons-material/FilterList";
 import { eventPlannerService } from "../../../../services/api";
-
-// Filter component for searching vendors
-const VendorFilter = (props) => (
-  <Filter {...props}>
-    <TextInput
-      label="Search Business Name"
-      source="businessName_like"
-      alwaysOn
-    />
-    <TextInput label="Search Service Type" source="serviceType_like" />
-    <SelectInput
-      label="Status"
-      source="status"
-      choices={[
-        { id: "PENDING_APPROVAL", name: "Pending Approval" },
-        { id: "APPROVED", name: "Approved" },
-        { id: "SUSPENDED", name: "Suspended" },
-      ]}
-    />
-  </Filter>
-);
 
 // Status component that allows changing the vendor status
 const VendorStatusField = ({ record, onStatusChange }) => {
   const notify = useNotify();
-  const refresh = useRefresh();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [newStatus, setNewStatus] = useState("");
 
@@ -539,7 +497,7 @@ const VendorDetailsDialog = ({ open, onClose, vendorId }) => {
 };
 
 // Custom VendorList component without using React Admin's List
-const VendorListOne = () => {
+const VendorListCustom = () => {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -570,6 +528,11 @@ const VendorListOne = () => {
         queryParams += `&status=${encodeURIComponent(statusFilter)}`;
       }
 
+      console.log(
+        "Fetching vendors with URL:",
+        `http://localhost:5000/api/eventplanner/vendors?${queryParams}`
+      );
+
       const response = await fetch(
         `http://localhost:5000/api/eventplanner/vendors?${queryParams}`,
         {
@@ -583,16 +546,65 @@ const VendorListOne = () => {
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch vendors");
+        const errorData = await response.json().catch(() => null);
+        throw new Error(
+          `Failed to fetch vendors: ${response.status} ${response.statusText}${
+            errorData
+              ? ` - ${errorData.message || JSON.stringify(errorData)}`
+              : ""
+          }`
+        );
       }
 
-      const data = await response.json();
-      setVendors(data);
+      let data;
+      try {
+        data = await response.json();
+        console.log("API response:", data);
+      } catch (jsonError) {
+        console.error("Error parsing JSON response:", jsonError);
+        throw new Error("Invalid response format from server");
+      }
+
+      // Ensure data is always an array
+      if (Array.isArray(data)) {
+        console.log("Setting vendors array of length:", data.length);
+        setVendors(data);
+      } else if (data && typeof data === "object") {
+        // If the response is an object with data property that's an array
+        if (data.data && Array.isArray(data.data)) {
+          console.log(
+            "Setting vendors from data.data array of length:",
+            data.data.length
+          );
+          setVendors(data.data);
+        } else if (data.message) {
+          // If it's an error message
+          throw new Error(data.message);
+        } else {
+          console.error(
+            "API response is not an array or has no data property:",
+            data
+          );
+          setVendors([]);
+          throw new Error("Unexpected data format received from server");
+        }
+      } else {
+        console.error("API response is not an array or object:", data);
+        setVendors([]);
+        throw new Error("Unexpected data format received from server");
+      }
 
       // Get total count from headers
       const totalCount = response.headers.get("x-total-count");
       if (totalCount) {
+        console.log("Setting total count:", totalCount);
         setTotal(parseInt(totalCount, 10));
+      } else {
+        console.warn("No x-total-count header found in response");
+        // Fallback to the length of the vendors array if available
+        if (Array.isArray(vendors) && vendors.length > 0) {
+          setTotal(vendors.length);
+        }
       }
 
       setError(null);
@@ -602,6 +614,7 @@ const VendorListOne = () => {
       notify(`Error: ${err.message || "Failed to load vendors"}`, {
         type: "error",
       });
+      setVendors([]); // Ensure vendors is always an array even on error
     } finally {
       setLoading(false);
     }
@@ -801,4 +814,4 @@ const VendorListOne = () => {
   );
 };
 
-export default VendorListOne;
+export default VendorListCustom;

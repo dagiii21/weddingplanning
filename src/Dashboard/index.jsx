@@ -83,6 +83,7 @@ const AdminPanel = () => {
       title="Wedding Planner Admin"
       loginPage={null}
       basename="/dashboard"
+      disableBlockingNavigation={true}
     >
       {renderResources()}
     </Admin>

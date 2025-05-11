@@ -1,183 +1,279 @@
-import api from "../../services/api";
-import { vendorService } from "../../services/api";
-import { API_URL } from "../../config/api.config";
+import { fetchUtils } from "react-admin";
 
-// Map React-Admin resource names to backend endpoints
-const resourceMap = {
-  dashboard: "/admin/dashboard/overview",
-  "event-planner": "/admin/event-planners",
-  user: "/admin/clients",
-  vendor: "/admin/vendors",
-  payemnt: "/admin/payments",
-  feedback: "/admin/feedback",
-  password: "/admin/clients", // special handling below
+const apiUrl = "http://localhost:5000/api";
+const httpClient = fetchUtils.fetchJson;
+
+// Helper to get the appropriate API path based on resource and user role
+const getApiPath = (resource, userRole) => {
+  // Default paths for admin role
+  const paths = {
+    "event-planner": "admin/event-planners",
+    vendor: "admin/vendors",
+    user: "admin/clients",
+    feedback: "admin/feedback",
+    payemnt: "admin/payments",
+    dashboard: "admin/dashboard",
+    bookings: "vendor/bookings",
+    Mangeservices: "vendor/services",
+    payments: "client/payment",
+    password: "client/account",
+    "my-bookings": "client/bookings",
+    services: "client/services",
+    account: "client/account",
+  };
+
+  // Override paths based on user role
+  if (userRole === "EVENT_PLANNER") {
+    const eventPlannerPaths = {
+      vendor: "eventplanner/vendors",
+      user: "eventplanner/clients",
+      feedback: "eventplanner/feedback",
+      payemnt: "eventplanner/payments",
+      dashboard: "eventplanner/dashboard",
+    };
+    return eventPlannerPaths[resource] || paths[resource];
+  }
+
+  if (userRole === "VENDOR") {
+    const vendorPaths = {
+      dashboard: "vendor/dashboard",
+      bookings: "vendor/bookings",
+      Mangeservices: "vendor/services",
+      payments: "vendor/payment",
+      account: "vendor/account",
+    };
+    return vendorPaths[resource] || paths[resource];
+  }
+
+  if (userRole === "CLIENT") {
+    const clientPaths = {
+      dashboard: "client/dashboard",
+      "my-bookings": "client/bookings",
+      payments: "client/payment",
+      account: "client/account",
+      services: "client/services",
+    };
+    return clientPaths[resource] || paths[resource];
+  }
+
+  return paths[resource];
 };
 
-/**
- * Data Provider for react-admin that connects to our real API
- * This replaces the test data provider with real API calls
- */
-const apiDataProvider = {
-  getList: (resource, params) => {
-    // Special case for vendor payments dashboard
-    if (resource === "payments") {
-      return vendorService.getPayments().then((response) => {
-        if (!response.data || !response.data.success) {
-          return { data: [], total: 0 };
-        }
+const convertRESTRequestToHTTP = (type, resource, params) => {
+  const userRole = sessionStorage.getItem("userRole");
+  const token = sessionStorage.getItem("token");
 
-        // Combine received and pending payments for the list
-        const receivedPayments = response.data.data.receivedPayments || [];
-        const pendingPayments = response.data.data.pendingPayments || [];
+  if (!token) {
+    throw new Error("No authentication token found");
+  }
 
-        // Add a type field to each payment to identify it
-        const allPayments = [
-          ...receivedPayments.map((payment) => ({
-            ...payment,
-            type: "received",
-          })),
-          ...pendingPayments.map((payment) => ({
-            ...payment,
-            type: "pending",
-          })),
-        ];
+  const options = {
+    headers: new Headers({
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    }),
+  };
 
-        return {
-          data: allPayments,
-          total: allPayments.length,
-          // Include the summary data for use in the dashboard
-          summary: {
-            totalPayments: response.data.data.totalPayments || 0,
-            receivedPaymentsCount: receivedPayments.length,
-            pendingPaymentsCount: pendingPayments.length,
-            vendorId: response.data.data.vendorId,
-          },
-        };
-      });
-    }
+  const apiPath = getApiPath(resource, userRole);
 
-    // Default behavior for other resources
-    const endpoint = resourceMap[resource] || `/${resource}`;
-    const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
-    const { field, order } = params.sort || { field: "id", order: "ASC" };
-    const query = {
-      ...params.filter,
-      _sort: field,
-      _order: order,
-      _start: (page - 1) * perPage,
-      _end: page * perPage,
-    };
-    return api.get(endpoint, { params: query }).then((response) => {
-      // If response is array, fake total
-      if (Array.isArray(response.data)) {
-        return { data: response.data, total: response.data.length };
-      }
-      // If response is object with items/total
-      return {
-        data: response.data.items || response.data,
-        total: response.data.total || response.data.length || 0,
+  if (!apiPath) {
+    throw new Error(`Unknown resource: ${resource}`);
+  }
+
+  let url = `${apiUrl}/${apiPath}`;
+
+  switch (type) {
+    case "GET_LIST": {
+      const { page, perPage } = params.pagination || { page: 1, perPage: 10 };
+      const { field, order } = params.sort || { field: "id", order: "DESC" };
+      const start = (page - 1) * perPage;
+      const end = page * perPage;
+
+      // Build query parameters
+      const query = {
+        _start: start,
+        _end: end,
+        _sort: field,
+        _order: order,
+        ...params.filter,
       };
-    });
-  },
 
-  getOne: (resource, params) => {
-    const endpoint = resourceMap[resource] || `/${resource}`;
-    return api.get(`${endpoint}/${params.id}`).then((response) => ({
-      data: response.data,
-    }));
-  },
+      // Convert query object to URL parameters
+      const queryString = Object.keys(query)
+        .map((key) => key + "=" + encodeURIComponent(query[key]))
+        .join("&");
 
-  getMany: (resource, params) => {
-    const endpoint = resourceMap[resource] || `/${resource}`;
-    return api
-      .get(endpoint, { params: { id: params.ids } })
-      .then((response) => ({
-        data: response.data,
-      }));
-  },
+      url = `${url}?${queryString}`;
 
-  getManyReference: (resource, params) => {
-    const endpoint = resourceMap[resource] || `/${resource}`;
-    const { page, perPage } = params.pagination;
-    const { field, order } = params.sort;
-    const query = {
-      ...params.filter,
-      [params.target]: params.id,
-      _sort: field,
-      _order: order,
-      _start: (page - 1) * perPage,
-      _end: page * perPage,
-    };
-    return api.get(endpoint, { params: query }).then((response) => ({
-      data: response.data.items || response.data,
-      total: response.data.total || response.data.length,
-    }));
-  },
-
-  create: (resource, params) => {
-    const endpoint = resourceMap[resource] || `/${resource}`;
-    // Special case: event-planner create expects { email, password, firstName, lastName, phone }
-    return api.post(endpoint, params.data).then((response) => ({
-      data: response.data,
-    }));
-  },
-
-  update: (resource, params) => {
-    const endpoint = resourceMap[resource] || `/${resource}`;
-    // Special PATCH for event-planner and vendor
-    if (resource === "event-planner") {
-      return api
-        .patch(`${endpoint}/${params.id}`, params.data)
-        .then((response) => ({
-          data: response.data,
-        }));
+      return { url, options: { ...options, method: "GET" } };
     }
-    if (resource === "vendor") {
-      return api
-        .patch(`${endpoint}/${params.id}`, params.data)
-        .then((response) => ({
-          data: response.data,
-        }));
+    case "GET_ONE":
+      return {
+        url: `${url}/${params.id}`,
+        options: { ...options, method: "GET" },
+      };
+    case "GET_MANY": {
+      const query = params.ids.map((id) => `id=${id}`).join("&");
+      return {
+        url: `${url}?${query}`,
+        options: { ...options, method: "GET" },
+      };
     }
-    // Special: password change
-    if (resource === "password") {
-      // params.data: { id, password }
-      return api
-        .patch(`/admin/clients/${params.data.id}/password`, {
-          password: params.data.password,
-        })
-        .then((response) => ({
-          data: response.data,
-        }));
+    case "GET_MANY_REFERENCE": {
+      const { page, perPage } = params.pagination;
+      const { field, order } = params.sort;
+      const start = (page - 1) * perPage;
+      const end = page * perPage;
+
+      const query = {
+        _start: start,
+        _end: end,
+        _sort: field,
+        _order: order,
+        ...params.filter,
+        [params.target]: params.id,
+      };
+
+      const queryString = Object.keys(query)
+        .map((key) => key + "=" + encodeURIComponent(query[key]))
+        .join("&");
+
+      return {
+        url: `${url}?${queryString}`,
+        options: { ...options, method: "GET" },
+      };
     }
-    // Default PUT
-    return api
-      .put(`${endpoint}/${params.id}`, params.data)
-      .then((response) => ({
-        data: response.data,
-      }));
-  },
-
-  updateMany: (resource, params) => {
-    const endpoint = resourceMap[resource] || `/${resource}`;
-    const promises = params.ids.map((id) =>
-      api.put(`${endpoint}/${id}`, params.data)
-    );
-    return Promise.all(promises).then(() => ({ data: params.ids }));
-  },
-
-  delete: (resource, params) => {
-    const endpoint = resourceMap[resource] || `/${resource}`;
-    return api
-      .delete(`${endpoint}/${params.id}`)
-      .then(() => ({ data: params.previousData }));
-  },
-
-  deleteMany: (resource, params) => {
-    const endpoint = resourceMap[resource] || `/${resource}`;
-    const promises = params.ids.map((id) => api.delete(`${endpoint}/${id}`));
-    return Promise.all(promises).then(() => ({ data: params.ids }));
-  },
+    case "CREATE":
+      return {
+        url,
+        options: {
+          ...options,
+          method: "POST",
+          body: JSON.stringify(params.data),
+        },
+      };
+    case "UPDATE":
+      return {
+        url: `${url}/${params.id}`,
+        options: {
+          ...options,
+          method: resource === "event-planner" ? "PATCH" : "PUT",
+          body: JSON.stringify(params.data),
+        },
+      };
+    case "DELETE":
+      return {
+        url: `${url}/${params.id}`,
+        options: { ...options, method: "DELETE" },
+      };
+    default:
+      throw new Error(`Unsupported fetch action type ${type}`);
+  }
 };
 
-export default apiDataProvider;
+const convertHTTPResponseToDataProvider = (
+  response,
+  type,
+  resource,
+  params
+) => {
+  const { json } = response;
+
+  switch (type) {
+    case "GET_LIST":
+    case "GET_MANY_REFERENCE":
+      if (!response.headers.has("x-total-count")) {
+        console.warn(
+          `The X-Total-Count header is missing in the HTTP Response for ${resource}. Using fallback.`
+        );
+        // Fallback - use the length of the returned array
+        return {
+          data: json,
+          total: Array.isArray(json) ? json.length : 0,
+        };
+      }
+
+      return {
+        data: json,
+        total: parseInt(response.headers.get("x-total-count"), 10),
+      };
+    case "CREATE":
+      return { data: { ...params.data, id: json.id } };
+    default:
+      return { data: json };
+  }
+};
+
+export default {
+  getList: (resource, params) => {
+    const request = convertRESTRequestToHTTP("GET_LIST", resource, params);
+    return httpClient(request.url, request.options).then((response) =>
+      convertHTTPResponseToDataProvider(response, "GET_LIST", resource, params)
+    );
+  },
+  getOne: (resource, params) => {
+    const request = convertRESTRequestToHTTP("GET_ONE", resource, params);
+    return httpClient(request.url, request.options).then((response) =>
+      convertHTTPResponseToDataProvider(response, "GET_ONE", resource, params)
+    );
+  },
+  getMany: (resource, params) => {
+    const request = convertRESTRequestToHTTP("GET_MANY", resource, params);
+    return httpClient(request.url, request.options).then((response) =>
+      convertHTTPResponseToDataProvider(response, "GET_MANY", resource, params)
+    );
+  },
+  getManyReference: (resource, params) => {
+    const request = convertRESTRequestToHTTP(
+      "GET_MANY_REFERENCE",
+      resource,
+      params
+    );
+    return httpClient(request.url, request.options).then((response) =>
+      convertHTTPResponseToDataProvider(
+        response,
+        "GET_MANY_REFERENCE",
+        resource,
+        params
+      )
+    );
+  },
+  create: (resource, params) => {
+    const request = convertRESTRequestToHTTP("CREATE", resource, params);
+    return httpClient(request.url, request.options).then((response) =>
+      convertHTTPResponseToDataProvider(response, "CREATE", resource, params)
+    );
+  },
+  update: (resource, params) => {
+    const request = convertRESTRequestToHTTP("UPDATE", resource, params);
+    return httpClient(request.url, request.options).then((response) =>
+      convertHTTPResponseToDataProvider(response, "UPDATE", resource, params)
+    );
+  },
+  delete: (resource, params) => {
+    const request = convertRESTRequestToHTTP("DELETE", resource, params);
+    return httpClient(request.url, request.options).then((response) =>
+      convertHTTPResponseToDataProvider(response, "DELETE", resource, params)
+    );
+  },
+  deleteMany: (resource, params) => {
+    // Implementation depends on your API. Here's a simple option:
+    return Promise.all(
+      params.ids.map((id) =>
+        httpClient(
+          `${apiUrl}/${getApiPath(
+            resource,
+            sessionStorage.getItem("userRole")
+          )}/${id}`,
+          {
+            method: "DELETE",
+            headers: new Headers({
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+            }),
+          }
+        )
+      )
+    ).then((responses) => ({ data: responses.map(({ json }) => json.id) }));
+  },
+};

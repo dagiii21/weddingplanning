@@ -10,6 +10,10 @@
 import axios from "axios";
 import { toast } from "react-toastify";
 import { API_URL, ENDPOINTS } from "@/config/api.config";
+import {
+  authFetch,
+  handleResponse,
+} from "../Dashboard/dataProvider/customFetch";
 
 // Configure axios instance
 const api = axios.create({
@@ -213,30 +217,103 @@ export const adminService = {
   // Dashboard Overview
   getOverview: () => api.get("/admin/dashboard/overview"),
 
+  // Admin profile
+  getProfile: () => api.get("/user/profile"),
+  updateAccount: (userId, data) => api.patch(`/user/update/${userId}`, data),
+
   // Event Planners
   getEventPlanners: (params) => api.get("/admin/event-planners", { params }),
   getEventPlanner: (id) => api.get(`/admin/event-planners/${id}`),
   createEventPlanner: (data) => api.post("/admin/event-planners", data),
-  updateEventPlanner: (id, data) =>
-    api.patch(`/admin/event-planners/${id}`, data),
+  updateEventPlanner: async (id, data) => {
+    const response = await authFetch(`/admin/event-planners/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+  },
   deleteEventPlanner: (id) => api.delete(`/admin/event-planners/${id}`),
 
   // Users (Clients)
   getClients: (params) => api.get("/admin/clients", { params }),
   getClient: (id) => api.get(`/admin/clients/${id}`),
   createClient: (data) => api.post("/admin/clients", data),
-  updateClient: (id, data) => api.put(`/admin/clients/${id}`, data),
+  updateClient: (id, data) => api.patch(`/admin/clients/${id}`, data),
   deleteClient: (id) => api.delete(`/admin/clients/${id}`),
   changeClientPassword: (id, password) =>
     api.patch(`/admin/clients/${id}/password`, { password }),
 
   // Vendors
-  getVendors: (params) => api.get("/admin/vendors", { params }),
+  getVendors: async (params = {}) => {
+    // Create URL with query parameters
+    const queryParams = new URLSearchParams();
+
+    // Add all parameters to the query
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        queryParams.append(key, value);
+      }
+    });
+
+    const queryString = queryParams.toString();
+    const endpoint = `/admin/vendors${queryString ? `?${queryString}` : ""}`;
+
+    console.log(`Getting vendors from endpoint: ${endpoint}`);
+
+    try {
+      const response = await authFetch(endpoint);
+      const result = await handleResponse(response);
+
+      // Ensure data is always an array
+      if (!result.data) {
+        result.data = [];
+      } else if (!Array.isArray(result.data)) {
+        // If it's not an array but has a data property that is an array
+        if (result.data.data && Array.isArray(result.data.data)) {
+          result.data = result.data.data;
+        } else {
+          result.data = [result.data];
+        }
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Error fetching vendors:", error);
+      throw error;
+    }
+  },
   getVendor: (id) => api.get(`/admin/vendors/${id}`),
-  updateVendor: (id, data) => api.patch(`/admin/vendors/${id}`, data),
+  updateVendor: async (id, data) => {
+    const response = await authFetch(`/admin/vendors/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+  },
   deleteVendor: (id) => api.delete(`/admin/vendors/${id}`),
-  approveVendor: (id) => api.patch(`/admin/vendors/${id}/approve`),
-  suspendVendor: (id) => api.patch(`/admin/vendors/${id}/suspend`),
+  approveVendor: async (id) => {
+    const response = await authFetch(`/admin/vendors/${id}/approve`, {
+      method: "POST",
+    });
+    return handleResponse(response);
+  },
+  suspendVendor: async (id) => {
+    const response = await authFetch(`/admin/vendors/${id}/suspend`, {
+      method: "POST",
+    });
+    return handleResponse(response);
+  },
+  toggleVendorBlock: async (id, blocked) => {
+    const response = await authFetch(`/admin/vendors/${id}/block`, {
+      method: "PATCH",
+      body: JSON.stringify({ blocked }),
+    });
+    return handleResponse(response);
+  },
+  getVendorById: async (id) => {
+    const response = await authFetch(`/admin/vendors/${id}`);
+    return handleResponse(response);
+  },
 
   // Payments
   getPayments: (params) => api.get("/admin/payments", { params }),
@@ -245,6 +322,88 @@ export const adminService = {
   // Feedback
   getFeedbacks: (params) => api.get("/admin/feedback", { params }),
   getFeedback: (id) => api.get(`/admin/feedback/${id}`),
+};
+
+/**
+ * Event Planner Service
+ * Handles event planner-specific API calls
+ */
+export const eventPlannerService = {
+  /**
+   * Fetches the event planner's profile information
+   * @returns {Promise} - Promise with user profile data
+   */
+  getProfile: () => api.get("/eventplanner/account/profile"),
+
+  /**
+   * Updates event planner account information including password
+   * @param {string} userId - The ID of the user to update
+   * @param {Object} data - The user data to update
+   * @returns {Promise} - Promise with updated user data
+   */
+  updateAccount: (userId, data) => {
+    return api.patch(`/eventplanner/account/${userId}`, data);
+  },
+
+  /**
+   * Updates a vendor's information
+   * @param {string} id - Vendor ID
+   * @param {Object} data - Data to update (businessName, description, serviceType)
+   * @returns {Promise} - Promise with updated vendor data
+   */
+  updateVendor: (id, data) => {
+    return api.patch(`/eventplanner/vendors/${id}`, data);
+  },
+
+  /**
+   * Updates a vendor's status
+   * @param {string} id - Vendor ID
+   * @param {string} status - New status (PENDING_APPROVAL, APPROVED, SUSPENDED)
+   * @returns {Promise} - Promise with update result
+   */
+  updateVendorStatus: (id, status) => {
+    return api.patch(`/eventplanner/vendors/${id}/status`, { status });
+  },
+
+  /**
+   * Block or unblock a vendor
+   * @param {string} id - Vendor ID
+   * @param {boolean} blocked - Whether to block (true) or unblock (false)
+   * @returns {Promise} - Promise with update result
+   */
+  toggleVendorBlock: (id, blocked) => {
+    return api.patch(`/eventplanner/vendors/${id}/block`, { blocked });
+  },
+
+  /**
+   * Report a vendor
+   * @param {string} id - Vendor ID
+   * @param {string} reason - Reason for reporting
+   * @returns {Promise} - Promise with update result
+   */
+  reportVendor: (id, reason) => {
+    return api.patch(`/eventplanner/vendors/${id}/report`, { reason });
+  },
+
+  /**
+   * Block or unblock a client
+   * @param {string} id - Client ID
+   * @param {boolean} blocked - Whether to block (true) or unblock (false)
+   * @returns {Promise} - Promise with update result
+   */
+  toggleClientBlock: (id, blocked) => {
+    return api.patch(`/eventplanner/clients/${id}/block`, { blocked });
+  },
+
+  /**
+   * Report a client
+   * @param {string} id - Client ID
+   * @param {string} reason - Reason for reporting
+   * @returns {Promise} - Promise with update result
+   */
+  reportClient: (id, reason) => {
+    return api.patch(`/eventplanner/clients/${id}/report`, { reason });
+  },
 };
 
 export default api;
