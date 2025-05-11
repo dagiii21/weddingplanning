@@ -14,8 +14,8 @@ import BookOnlineIcon from "@mui/icons-material/BookOnline";
 // Import components from the pages folder
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import VendorDashboard from "../pages/vendor/VendorDashboard";
-import EventPlannerDashboard from "../pages/eventplanner/eventPlannerDashbord";
-import UserDashbord from "../pages/user/UserDashboard";
+import EventPlannerDashboard from "../pages/eventplanner/EventPlannerDashboard";
+import UserDashboard from "../pages/user/UserDashboard";
 
 // Import Event Planner components
 import EventPlannerList from "../pages/admin/EventPlanner/EventPlannerList";
@@ -53,6 +53,7 @@ import payemntList from "../pages/admin/payment/payementList";
 
 import MyBookingsList from "../pages/user/MyBookings/MyBookingsList";
 import PaymentList from "../pages/user/payment/PaymentList";
+import PaymentStatus from "../pages/user/payment/PaymentStatus";
 import VendorListOne from "../pages/eventplanner/Vendor/VendorList";
 import userListOne from "../pages/eventplanner/user/userList";
 import feedbackListOne from "../pages/eventplanner/feedback/feedbacklist";
@@ -203,7 +204,7 @@ export const userResources = [
     name: "dashboard",
     label: "Dashboard",
     icon: DashboardIcon,
-    list: UserDashbord,
+    list: UserDashboard,
   },
   {
     name: "my-bookings",
@@ -216,6 +217,13 @@ export const userResources = [
     label: "Payments",
     icon: payemnt,
     list: PaymentList,
+  },
+  {
+    name: "payment/status",
+    list: PaymentStatus,
+    options: { label: "Payment Status" },
+    // Hide from the sidebar as it's only accessed via URL
+    hasList: false,
   },
   {
     name: "account",

@@ -199,6 +199,13 @@ export const clientService = {
     api.post(ENDPOINTS.CLIENT.PAYMENT_INITIATE, paymentData),
 
   /**
+   * Verifies a payment status
+   * @param {Object} data - Contains tx_ref and paymentId
+   * @returns {Promise} - Promise with payment verification details and updated status
+   */
+  verifyPayment: (data) => api.post(ENDPOINTS.CLIENT.PAYMENT_VERIFY, data),
+
+  /**
    * Gets all conversations for the current client
    * @returns {Promise} - Promise with conversations data
    */

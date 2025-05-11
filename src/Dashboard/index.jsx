@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Admin, Resource, CustomRoutes } from "react-admin";
+import { Route } from "react-router-dom";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 import Box from "@mui/material/Box";
 import {
@@ -9,6 +10,9 @@ import {
   userResources,
 } from "./layout/resources";
 import dataProvider from "./dataProvider/apiDataProvider";
+
+// Import the payment status page component directly for custom routing
+import PaymentStatus from "./pages/user/payment/PaymentStatus";
 
 // Custom loader component only to hide the admin panel while loading
 const Loader = () => (
@@ -86,6 +90,11 @@ const AdminPanel = () => {
       disableBlockingNavigation={true}
     >
       {renderResources()}
+
+      {/* Custom routes for special pages */}
+      <CustomRoutes>
+        <Route path="/payment/status" element={<PaymentStatus />} />
+      </CustomRoutes>
     </Admin>
   );
 };

@@ -57,6 +57,7 @@ export const ENDPOINTS = {
     SERVICES: "/client/services",
     CREATE_BOOKING: "/client/bookings",
     PAYMENT_INITIATE: "/client/payment/initiate",
+    PAYMENT_VERIFY: "/client/payment/verify",
     CONVERSATIONS: "/client/conversations",
     START_CONVERSATION: "/client/conversations",
   },
