@@ -87,7 +87,7 @@ const Hero = () => {
 
           {/* Hero Title - Larger and more elegant */}
           <h1 
-            className={`text-6xl md:text-7xl lg:text-8xl text-white font-light tracking-tight mb-6 leading-tight
+            className={`text-3xl md:text-4xl lg:text-5xl text-white font-light tracking-tight mb-4 leading-tight
                        transition-all duration-1000 ease-out
                        ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
             style={{ textShadow: '0 2px 15px rgba(0, 0, 0, 0.8)' }}
