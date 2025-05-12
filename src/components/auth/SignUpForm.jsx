@@ -183,6 +183,10 @@ const SignUpForm = () => {
                           }`}
                 placeholder="Enter your business name"
               />
+              <p className="mt-1 text-xs text-gray-500">
+                Business name must be at least 3 characters for payment
+                processing.
+              </p>
               {errors.businessName && (
                 <p className="mt-1 text-sm text-red-600">
                   {errors.businessName}
@@ -221,6 +225,41 @@ const SignUpForm = () => {
               {errors.serviceType && (
                 <p className="mt-1 text-sm text-red-600">
                   {errors.serviceType}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label
+                htmlFor="accountNumber"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                CBE Account Number
+              </label>
+              <div>
+                <input
+                  id="accountNumber"
+                  name="accountNumber"
+                  type="text"
+                  value={formData.accountNumber || ""}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-colors
+                            ${
+                              errors.accountNumber
+                                ? "border-red-500 focus:ring-red-200"
+                                : "border-gray-300 focus:ring-purple-200 focus:border-purple-400"
+                            }`}
+                  placeholder="Enter your 13-digit CBE account number"
+                  maxLength={13}
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Only Commercial Bank of Ethiopia (CBE) accounts are accepted.
+                  Must be exactly 13 digits.
+                </p>
+              </div>
+              {errors.accountNumber && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.accountNumber}
                 </p>
               )}
             </div>

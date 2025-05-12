@@ -56,9 +56,20 @@ const vendorSchema = z
     ...commonFields,
     businessName: z
       .string()
-      .min(2, { message: "Business name must be at least 2 characters" })
+      .min(3, {
+        message:
+          "Business name must be at least 3 characters (Chapa payment requirement)",
+      })
       .max(100, { message: "Business name must be less than 100 characters" }),
     serviceType: z.string().min(1, { message: "Please select a service type" }),
+    accountNumber: z
+      .string()
+      .regex(/^\d{13}$/, {
+        message: "CBE account number must be exactly 13 digits",
+      })
+      .refine((val) => val.length === 13, {
+        message: "CBE account number must be exactly 13 digits",
+      }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -86,6 +97,7 @@ export const useSignUpForm = () => {
     role: "CLIENT", // Default role
     businessName: "",
     serviceType: "",
+    accountNumber: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -210,7 +222,7 @@ export const useSignUpForm = () => {
       } else {
         // Clear vendor-specific errors when switching to CLIENT
         setErrors((prev) => {
-          const { businessName, serviceType, ...rest } = prev;
+          const { businessName, serviceType, accountNumber, ...rest } = prev;
           return rest;
         });
       }
@@ -234,6 +246,7 @@ export const useSignUpForm = () => {
       if (userData.role === "VENDOR") {
         apiData.businessName = userData.businessName;
         apiData.serviceType = userData.serviceType;
+        apiData.accountNumber = userData.accountNumber;
       }
 
       console.log(
@@ -318,6 +331,7 @@ export const useSignUpForm = () => {
           role: "CLIENT",
           businessName: "",
           serviceType: "",
+          accountNumber: "",
         });
 
         // If token is returned, store it

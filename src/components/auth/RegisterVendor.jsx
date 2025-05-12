@@ -1,8 +1,8 @@
-import React from 'react';
-import useRegisterVendor from '../../hooks/useRegisterVendor';
-import Button from '../ui/Button';
-import PhoneInput from '../ui/PhoneInput';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from "react";
+import useRegisterVendor from "../../hooks/useRegisterVendor";
+import Button from "../ui/Button";
+import PhoneInput from "../ui/PhoneInput";
+import { motion, AnimatePresence } from "framer-motion";
 
 const RegisterVendor = () => {
   const {
@@ -18,22 +18,22 @@ const RegisterVendor = () => {
     nextStep,
     prevStep,
     setFormData,
-    setPreviews
+    setPreviews,
   } = useRegisterVendor();
 
   const stepVariants = {
     enter: {
-      x: '100%',
-      opacity: 0
+      x: "100%",
+      opacity: 0,
     },
     center: {
       x: 0,
-      opacity: 1
+      opacity: 1,
     },
     exit: {
-      x: '-100%',
-      opacity: 0
-    }
+      x: "-100%",
+      opacity: 0,
+    },
   };
 
   const renderStep1 = () => (
@@ -50,7 +50,10 @@ const RegisterVendor = () => {
 
       {/* Username Field */}
       <div>
-        <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="username"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Username
         </label>
         <input
@@ -60,7 +63,11 @@ const RegisterVendor = () => {
           value={formData.username}
           onChange={handleChange}
           className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-colors
-                    ${errors.username ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-purple-200 focus:border-purple-400'}`}
+                    ${
+                      errors.username
+                        ? "border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:ring-purple-200 focus:border-purple-400"
+                    }`}
           placeholder="Enter your username"
         />
         {errors.username && (
@@ -70,7 +77,10 @@ const RegisterVendor = () => {
 
       {/* Email Field */}
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="email"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Email Address
         </label>
         <input
@@ -80,7 +90,11 @@ const RegisterVendor = () => {
           value={formData.email}
           onChange={handleChange}
           className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-colors
-                    ${errors.email ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-purple-200 focus:border-purple-400'}`}
+                    ${
+                      errors.email
+                        ? "border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:ring-purple-200 focus:border-purple-400"
+                    }`}
           placeholder="Enter your email"
         />
         {errors.email && (
@@ -97,7 +111,10 @@ const RegisterVendor = () => {
 
       {/* Password Field */}
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="password"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Password
         </label>
         <input
@@ -107,7 +124,11 @@ const RegisterVendor = () => {
           value={formData.password}
           onChange={handleChange}
           className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-colors
-                    ${errors.password ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-purple-200 focus:border-purple-400'}`}
+                    ${
+                      errors.password
+                        ? "border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:ring-purple-200 focus:border-purple-400"
+                    }`}
           placeholder="Create a password"
         />
         {errors.password && (
@@ -117,7 +138,10 @@ const RegisterVendor = () => {
 
       {/* Confirm Password Field */}
       <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="confirmPassword"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Confirm Password
         </label>
         <input
@@ -127,7 +151,11 @@ const RegisterVendor = () => {
           value={formData.confirmPassword}
           onChange={handleChange}
           className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-colors
-                    ${errors.confirmPassword ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-purple-200 focus:border-purple-400'}`}
+                    ${
+                      errors.confirmPassword
+                        ? "border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:ring-purple-200 focus:border-purple-400"
+                    }`}
           placeholder="Confirm your password"
         />
         {errors.confirmPassword && (
@@ -137,11 +165,7 @@ const RegisterVendor = () => {
 
       {/* Next Button */}
       <div className="pt-4">
-        <Button
-          text="Next"
-          onClick={nextStep}
-          fullWidth
-        />
+        <Button text="Next" onClick={nextStep} fullWidth />
       </div>
     </motion.div>
   );
@@ -161,7 +185,10 @@ const RegisterVendor = () => {
 
       {/* Business Name */}
       <div>
-        <label htmlFor="businessName" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="businessName"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Business Name
         </label>
         <input
@@ -171,9 +198,16 @@ const RegisterVendor = () => {
           value={formData.businessName || ""}
           onChange={handleChange}
           className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-colors
-                    ${errors.businessName ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-purple-200 focus:border-purple-400'}`}
+                    ${
+                      errors.businessName
+                        ? "border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:ring-purple-200 focus:border-purple-400"
+                    }`}
           placeholder="Enter your business name"
         />
+        <p className="mt-1 text-xs text-gray-500">
+          Business name must be at least 3 characters for payment processing.
+        </p>
         {errors.businessName && (
           <p className="mt-1 text-sm text-red-600">{errors.businessName}</p>
         )}
@@ -181,7 +215,10 @@ const RegisterVendor = () => {
 
       {/* Business Type */}
       <div>
-        <label htmlFor="businessType" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="businessType"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Business Type
         </label>
         <select
@@ -190,7 +227,11 @@ const RegisterVendor = () => {
           value={formData.businessType || ""}
           onChange={handleChange}
           className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-colors
-                    ${errors.businessType ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-purple-200 focus:border-purple-400'}`}
+                    ${
+                      errors.businessType
+                        ? "border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:ring-purple-200 focus:border-purple-400"
+                    }`}
         >
           <option value="">Select business type</option>
           <option value="venue">Venue</option>
@@ -208,7 +249,10 @@ const RegisterVendor = () => {
 
       {/* Business Address */}
       <div>
-        <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="address"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Business Address
         </label>
         <textarea
@@ -218,7 +262,11 @@ const RegisterVendor = () => {
           value={formData.address || ""}
           onChange={handleChange}
           className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-colors
-                    ${errors.address ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-purple-200 focus:border-purple-400'}`}
+                    ${
+                      errors.address
+                        ? "border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:ring-purple-200 focus:border-purple-400"
+                    }`}
           placeholder="Enter your business address"
         />
         {errors.address && (
@@ -226,9 +274,46 @@ const RegisterVendor = () => {
         )}
       </div>
 
+      {/* CBE Account Number */}
+      <div>
+        <label
+          htmlFor="accountNumber"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          CBE Account Number
+        </label>
+        <div>
+          <input
+            id="accountNumber"
+            name="accountNumber"
+            type="text"
+            value={formData.accountNumber || ""}
+            onChange={handleChange}
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-colors
+                      ${
+                        errors.accountNumber
+                          ? "border-red-500 focus:ring-red-200"
+                          : "border-gray-300 focus:ring-purple-200 focus:border-purple-400"
+                      }`}
+            placeholder="Enter your 13-digit CBE account number"
+            maxLength={13}
+          />
+          <p className="mt-1 text-xs text-gray-500">
+            Only Commercial Bank of Ethiopia (CBE) accounts are accepted. Must
+            be 13 digits.
+          </p>
+        </div>
+        {errors.accountNumber && (
+          <p className="mt-1 text-sm text-red-600">{errors.accountNumber}</p>
+        )}
+      </div>
+
       {/* Business Description */}
       <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="description"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Business Description
         </label>
         <textarea
@@ -238,7 +323,11 @@ const RegisterVendor = () => {
           value={formData.description || ""}
           onChange={handleChange}
           className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-colors
-                    ${errors.description ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-purple-200 focus:border-purple-400'}`}
+                    ${
+                      errors.description
+                        ? "border-red-500 focus:ring-red-200"
+                        : "border-gray-300 focus:ring-purple-200 focus:border-purple-400"
+                    }`}
           placeholder="Describe your business and services"
         />
         {errors.description && (
@@ -253,11 +342,7 @@ const RegisterVendor = () => {
           onClick={prevStep}
           className="flex-1 bg-gray-500 hover:bg-gray-600"
         />
-        <Button
-          text="Next"
-          onClick={nextStep}
-          className="flex-1"
-        />
+        <Button text="Next" onClick={nextStep} className="flex-1" />
       </div>
     </motion.div>
   );
@@ -291,8 +376,8 @@ const RegisterVendor = () => {
                 />
                 <button
                   onClick={() => {
-                    setFormData(prev => ({ ...prev, workCertificate: null }));
-                    setPreviews(prev => ({ ...prev, workCertificate: null }));
+                    setFormData((prev) => ({ ...prev, workCertificate: null }));
+                    setPreviews((prev) => ({ ...prev, workCertificate: null }));
                   }}
                   className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
                 >
@@ -331,9 +416,7 @@ const RegisterVendor = () => {
                   </label>
                   <p className="pl-1">or drag and drop</p>
                 </div>
-                <p className="text-xs text-gray-500">
-                  PNG, JPG, PDF up to 5MB
-                </p>
+                <p className="text-xs text-gray-500">PNG, JPG, PDF up to 5MB</p>
               </>
             )}
           </div>
@@ -359,8 +442,8 @@ const RegisterVendor = () => {
                 />
                 <button
                   onClick={() => {
-                    setFormData(prev => ({ ...prev, idFront: null }));
-                    setPreviews(prev => ({ ...prev, idFront: null }));
+                    setFormData((prev) => ({ ...prev, idFront: null }));
+                    setPreviews((prev) => ({ ...prev, idFront: null }));
                   }}
                   className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
                 >
@@ -399,9 +482,7 @@ const RegisterVendor = () => {
                   </label>
                   <p className="pl-1">or drag and drop</p>
                 </div>
-                <p className="text-xs text-gray-500">
-                  PNG, JPG up to 5MB
-                </p>
+                <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
               </>
             )}
           </div>
@@ -427,8 +508,8 @@ const RegisterVendor = () => {
                 />
                 <button
                   onClick={() => {
-                    setFormData(prev => ({ ...prev, idBack: null }));
-                    setPreviews(prev => ({ ...prev, idBack: null }));
+                    setFormData((prev) => ({ ...prev, idBack: null }));
+                    setPreviews((prev) => ({ ...prev, idBack: null }));
                   }}
                   className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
                 >
@@ -467,9 +548,7 @@ const RegisterVendor = () => {
                   </label>
                   <p className="pl-1">or drag and drop</p>
                 </div>
-                <p className="text-xs text-gray-500">
-                  PNG, JPG up to 5MB
-                </p>
+                <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
               </>
             )}
           </div>
@@ -504,58 +583,63 @@ const RegisterVendor = () => {
             Registration Successful!
           </h3>
           <p className="text-green-600">
-            Your vendor registration has been submitted. Please wait for admin approval.
-            You will receive an email once your account is approved.
+            Your vendor registration has been submitted. Please wait for admin
+            approval. You will receive an email once your account is approved.
           </p>
           <Button
             text="Back to Login"
-            onClick={() => window.location.href = '/login'}
+            onClick={() => (window.location.href = "/login")}
             className="mt-4"
           />
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="mb-8 w-full">
-  <div className="relative w-full">
-    {/* Progress Line Background */}
-    <div className="absolute top-4 left-0 right-0 h-1 bg-gray-200 z-0"></div>
+            <div className="relative w-full">
+              {/* Progress Line Background */}
+              <div className="absolute top-4 left-0 right-0 h-1 bg-gray-200 z-0"></div>
 
-    {/* Active Progress Line */}
-    <div 
-      className="absolute top-4 left-0 h-1 bg-purple-600 z-10 transition-all duration-300"
-      style={{
-        width: `${((currentStep - 1) / 2) * 100}%`
-      }}
-    ></div>
+              {/* Active Progress Line */}
+              <div
+                className="absolute top-4 left-0 h-1 bg-purple-600 z-10 transition-all duration-300"
+                style={{
+                  width: `${((currentStep - 1) / 2) * 100}%`,
+                }}
+              ></div>
 
-    {/* Steps */}
-    <div className="flex justify-between relative z-20">
-      {[
-        { step: 1, label: "Personal" },
-        { step: 2, label: "Business" },
-        { step: 3, label: "Documents" },
-      ].map(({ step, label }) => (
-        <div key={step} className="flex flex-col items-center w-1/3">
-          <div
-            className={`rounded-full h-8 w-8 flex items-center justify-center 
-              ${currentStep >= step ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'}
+              {/* Steps */}
+              <div className="flex justify-between relative z-20">
+                {[
+                  { step: 1, label: "Personal" },
+                  { step: 2, label: "Business" },
+                  { step: 3, label: "Documents" },
+                ].map(({ step, label }) => (
+                  <div key={step} className="flex flex-col items-center w-1/3">
+                    <div
+                      className={`rounded-full h-8 w-8 flex items-center justify-center 
+              ${
+                currentStep >= step
+                  ? "bg-purple-600 text-white"
+                  : "bg-gray-200 text-gray-600"
+              }
               transition-all duration-300`}
-          >
-            {step}
+                    >
+                      {step}
+                    </div>
+                    <span
+                      className={`mt-2 text-xs font-medium ${
+                        currentStep >= step
+                          ? "text-purple-600"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-          <span
-            className={`mt-2 text-xs font-medium ${
-              currentStep >= step ? 'text-purple-600' : 'text-gray-500'
-            }`}
-          >
-            {label}
-          </span>
-        </div>
-      ))}
-    </div>
-  </div>
-</div>
-
 
           <AnimatePresence mode="wait">
             {currentStep === 1 && renderStep1()}
