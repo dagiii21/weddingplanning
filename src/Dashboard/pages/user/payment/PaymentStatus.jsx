@@ -22,12 +22,13 @@ import {
   Refresh as RefreshIcon,
   ContactSupport as ContactSupportIcon,
 } from "@mui/icons-material";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { clientService } from "../../../../services/api";
 import { toast } from "react-toastify";
 
 const PaymentStatus = () => {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const [status, setStatus] = useState("LOADING"); // LOADING, SUCCESS, FAILED
   const [paymentDetails, setPaymentDetails] = useState(null);
@@ -35,8 +36,40 @@ const PaymentStatus = () => {
   const [error, setError] = useState(null);
   const [errorDetails, setErrorDetails] = useState(null);
 
-  const tx_ref = searchParams.get("tx_ref");
-  const paymentId = searchParams.get("payment_id");
+  // Get parameters from URL, handling both normal and HTML-encoded versions
+  const getParamFromUrl = (paramName) => {
+    // First try to get from searchParams (normal URL)
+    let value = searchParams.get(paramName);
+
+    // If not found, try to extract from raw URL (might have HTML encoding)
+    if (!value && location.search) {
+      // Handle case where &amp; was used instead of &
+      const rawSearch = location.search.includes("&amp;")
+        ? location.search.replace(/&amp;/g, "&")
+        : location.search;
+
+      const urlParams = new URLSearchParams(rawSearch);
+      value = urlParams.get(paramName);
+
+      // If found this way but original searchParams didn't have it,
+      // it means we had an encoded URL - log this for debugging
+      if (value && !searchParams.get(paramName)) {
+        console.log(`Found ${paramName} in encoded URL: ${value}`);
+      }
+    }
+
+    return value;
+  };
+
+  const tx_ref = getParamFromUrl("tx_ref");
+  const paymentId = getParamFromUrl("payment_id");
+
+  // Log actual raw URL for debugging
+  useEffect(() => {
+    console.log("Raw URL search string:", location.search);
+    console.log("Detected tx_ref:", tx_ref);
+    console.log("Detected payment_id:", paymentId);
+  }, [location.search, tx_ref, paymentId]);
 
   const verifyPaymentStatus = async () => {
     setLoading(true);
@@ -50,6 +83,7 @@ const PaymentStatus = () => {
           message: "The URL is missing required parameters",
           tx_ref: tx_ref || "Missing",
           paymentId: paymentId || "Missing",
+          rawUrl: location.search || "Empty search params",
         });
         setLoading(false);
         return;
@@ -87,6 +121,7 @@ const PaymentStatus = () => {
         paymentId: paymentId,
         response: err.response?.data || {},
         timestamp: new Date().toISOString(),
+        rawUrl: location.search,
       });
 
       setError(`${errorMessage} (Code: ${statusCode || "Unknown"})`);
