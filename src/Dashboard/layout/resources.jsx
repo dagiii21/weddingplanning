@@ -218,13 +218,13 @@ export const userResources = [
     icon: payemnt,
     list: PaymentList,
   },
-  {
-    name: "payment/status",
-    list: PaymentStatus,
-    options: { label: "Payment Status" },
-    // Hide from the sidebar as it's only accessed via URL
-    hasList: false,
-  },
+  // {
+  //   name: "payment/status",
+  //   list: PaymentStatus,
+  //   options: { label: "Payment Status" },
+  //   // Hide from the sidebar as it's only accessed via URL
+  //   hasList: false,
+  // },
   {
     name: "account",
     label: "Account Settings",
