@@ -111,6 +111,15 @@ export const vendorService = {
       throw error;
     }
   },
+  getDashboardOverview: async () => {
+    try {
+      const response = await api.get("/vendor/dashboard/overview");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching vendor dashboard overview:", error);
+      throw error;
+    }
+  },
   getConversations: () => api.get(ENDPOINTS.VENDOR.CONVERSATIONS),
   startConversation: (clientId) =>
     api.post(ENDPOINTS.VENDOR.CONVERSATIONS, { clientId }),

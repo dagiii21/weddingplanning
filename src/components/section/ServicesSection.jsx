@@ -4,10 +4,10 @@ import useServices from "../../hooks/useServices";
 import { toast } from "react-toastify";
 
 const ServicesSection = () => {
-  const { services, loading, error } = useServices();
+  const { services, loading, error } = useServices(6); // Fetch up to 6 services
   const navigate = useNavigate();
 
-  const handleServiceClick = (serviceTitle) => {
+  const handleBookService = (serviceId, serviceTitle) => {
     // Check if user is authenticated
     const token =
       localStorage.getItem("token") || sessionStorage.getItem("token");
@@ -16,18 +16,49 @@ const ServicesSection = () => {
     const userRole =
       localStorage.getItem("userRole") || sessionStorage.getItem("userRole");
 
-    if (token && userRole === "client") {
-      // If authenticated AND a client, navigate to dashboard services
-      navigate(
-        `/dashboard/services?selected=${encodeURIComponent(serviceTitle)}`
+    if (token && userRole === "CLIENT") {
+      // If authenticated AND a client, navigate to booking page
+      navigate(`/dashboard/booking/${serviceId}`);
+    } else if (token && userRole) {
+      // User is logged in but NOT as a client
+      toast.warning(
+        `You're logged in as a ${userRole.toLowerCase()}. Only clients can book services.`,
+        {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        }
       );
-    } else {
-      // If not authenticated OR not a client, redirect to login page
-      const message = token
-        ? "This feature is only available for clients. Please log in with a client account."
-        : "Please log in to view service details";
 
-      toast.info(message, {
+      // Ask if they want to log out and create a client account
+      const confirmLogout = window.confirm(
+        "Would you like to log out from your current account and log in as a client?"
+      );
+
+      if (confirmLogout) {
+        // Clear all auth data
+        localStorage.removeItem("token");
+        sessionStorage.removeItem("token");
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("user");
+        localStorage.removeItem("userRole");
+        sessionStorage.removeItem("userRole");
+
+        // Store redirect destination
+        sessionStorage.setItem(
+          "redirectAfterLogin",
+          `/dashboard/booking/${serviceId}`
+        );
+
+        // Navigate to login
+        navigate("/login");
+      }
+    } else {
+      // Not logged in at all
+      toast.info("Please log in as a client to book this service", {
         position: "top-right",
         autoClose: 5000,
         hideProgressBar: false,
@@ -39,18 +70,8 @@ const ServicesSection = () => {
       // Store the intended destination to redirect after login
       sessionStorage.setItem(
         "redirectAfterLogin",
-        `/dashboard/services?selected=${encodeURIComponent(serviceTitle)}`
+        `/dashboard/booking/${serviceId}`
       );
-
-      // Clear existing token if the user is a vendor
-      if (token && userRole !== "client") {
-        localStorage.removeItem("token");
-        sessionStorage.removeItem("token");
-        localStorage.removeItem("user");
-        sessionStorage.removeItem("user");
-        localStorage.removeItem("userRole");
-        sessionStorage.removeItem("userRole");
-      }
 
       navigate("/login");
     }
@@ -93,14 +114,14 @@ const ServicesSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {servicesToRender.map((service, index) => (
             <div
-              key={index}
+              key={service.id || index}
               className="bg-white/90 rounded-2xl overflow-hidden shadow-lg transition-all duration-300 hover:shadow-[0_12px_28px_rgba(147,51,234,0.15)] group cursor-pointer relative"
-              onClick={() => handleServiceClick(service.title)}
+              onClick={() => handleBookService(service.id, service.title)}
               role="button"
-              aria-label={`View more about ${service.title}`}
+              aria-label={`Book ${service.title}`}
             >
               {/* Decorative corner accent */}
-              <div className="absolute top-0 right-0 w-16 h-16  rounded-2xl overflow-hidden z-0">
+              <div className="absolute top-0 right-0 w-16 h-16 rounded-2xl overflow-hidden z-0">
                 <div className="absolute transform rotate-45 bg-gradient-to-r from-purple-300/50 to-pink-300/50 w-24 h-24 -top-12 -right-12"></div>
               </div>
 
@@ -116,7 +137,12 @@ const ServicesSection = () => {
                   <div className="absolute top-4 left-4 flex items-center bg-gradient-to-r from-purple-600 to-pink-500 text-white text-xs font-semibold px-3 py-1 rounded-full z-10 shadow-sm">
                     <span className="mr-1">0{index + 1}</span>
                     <span className="w-1 h-1 bg-white rounded-full mx-1"></span>
-                    <span>Premium</span>
+                    <span>{service.category || "Premium"}</span>
+                  </div>
+
+                  {/* Price badge */}
+                  <div className="absolute bottom-4 right-4 bg-white/90 text-wedding-purple font-bold px-3 py-1 rounded-full z-10 shadow-sm">
+                    ETB {service.price?.toLocaleString()}
                   </div>
                 </div>
               ) : (
@@ -129,7 +155,12 @@ const ServicesSection = () => {
                   <div className="absolute top-4 left-4 flex items-center bg-gradient-to-r from-purple-600 to-pink-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-sm">
                     <span className="mr-1">0{index + 1}</span>
                     <span className="w-1 h-1 bg-white rounded-full mx-1"></span>
-                    <span>Premium</span>
+                    <span>{service.category || "Premium"}</span>
+                  </div>
+
+                  {/* Price badge */}
+                  <div className="absolute bottom-4 right-4 bg-white/90 text-wedding-purple font-bold px-3 py-1 rounded-full z-10 shadow-sm">
+                    ETB {service.price?.toLocaleString()}
                   </div>
                 </div>
               )}
@@ -144,13 +175,27 @@ const ServicesSection = () => {
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 group-hover:w-full transition-all duration-500"></span>
                 </h3>
 
-                <p className="text-gray-600 leading-relaxed">
+                {service.vendor && (
+                  <div className="mb-2 text-sm text-gray-600">
+                    Provided by:{" "}
+                    <span className="font-medium">
+                      {service.vendor.businessName}
+                    </span>
+                    {service.vendor.rating && (
+                      <span className="ml-2">
+                        ⭐ {service.vendor.rating.toFixed(1)}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <p className="text-gray-600 leading-relaxed line-clamp-3">
                   {service.description}
                 </p>
 
                 <div className="mt-6 inline-flex items-center relative overflow-hidden group-hover:bg-gradient-to-r group-hover:from-purple-500 group-hover:to-pink-500 px-5 py-2 rounded-full transition-all duration-300">
                   <span className="font-medium text-sm relative z-10 text-purple-700 group-hover:text-white transition-colors duration-300">
-                    View More
+                    Book Now
                   </span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -168,6 +213,15 @@ const ServicesSection = () => {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="text-center mt-10">
+          <button
+            onClick={() => navigate("/services")}
+            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-medium rounded-full shadow-md hover:shadow-lg transition-all duration-300"
+          >
+            View All Services
+          </button>
         </div>
       </div>
     </section>

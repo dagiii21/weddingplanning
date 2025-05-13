@@ -40,6 +40,9 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 // Custom hook for vendor dashboard
 import useVendorDashboard from "../../../hooks/useVendorDashboard";
 
+// Import the pending approval page
+import PendingApprovalPage from "./PendingApprovalPage";
+
 // Styled components
 const StyledCard = styled(Card)(({ theme }) => ({
   height: "100%",
@@ -77,6 +80,14 @@ const QuickActionButton = styled(Button)(({ theme }) => ({
 const VendorDashboard = () => {
   const navigate = useNavigate();
   const { dashboardData, loading, error, refetch } = useVendorDashboard();
+  const [vendorStatus, setVendorStatus] = useState(null);
+
+  // Check vendor approval status
+  useEffect(() => {
+    if (dashboardData && dashboardData.status) {
+      setVendorStatus(dashboardData.status);
+    }
+  }, [dashboardData]);
 
   const HomeButton = () => {
     return (
@@ -118,6 +129,11 @@ const VendorDashboard = () => {
         </Box>
       </Box>
     );
+  }
+
+  // Show pending approval page if vendor is not approved
+  if (vendorStatus && vendorStatus !== "APPROVED") {
+    return <PendingApprovalPage />;
   }
 
   // Create booking events from confirmed bookings

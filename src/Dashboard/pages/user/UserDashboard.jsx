@@ -19,10 +19,13 @@ import {
   Avatar,
   CircularProgress,
   Chip,
+  CardMedia,
+  CardActions,
 } from "@mui/material";
 
 // Import custom hook for client dashboard data
 import useClientDashboard from "../../../hooks/useClientDashboard";
+import useServices from "../../../hooks/useServices";
 
 // Icons
 import HomeIcon from "@mui/icons-material/Home";
@@ -34,6 +37,8 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import BookOnlineIcon from "@mui/icons-material/BookOnline";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ReceiptIcon from "@mui/icons-material/Receipt";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import BusinessCenterIcon from "@mui/icons-material/BusinessCenter";
 
 // Styled components
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -64,9 +69,20 @@ const DashboardHeader = styled(Box)(({ theme }) => ({
   },
 }));
 
-// Get user name from local storage or use default
+// Get user name from session storage or use default
 const getUserName = () => {
-  return localStorage.getItem("userName") || "Guest User";
+  try {
+    const userData = JSON.parse(
+      sessionStorage.getItem("userData") || localStorage.getItem("userData")
+    );
+    if (userData && userData.firstName) {
+      return `${userData.firstName} ${userData.lastName || ""}`;
+    }
+    return " User";
+  } catch (error) {
+    console.error("Error parsing user data:", error);
+    return " User";
+  }
 };
 
 // Format date helper function
@@ -85,7 +101,7 @@ const formatDate = (dateString) => {
 
 const UserDashboard = () => {
   const navigate = useNavigate();
-  const [userName, setUserName] = useState("Guest User");
+  const [userName, setUserName] = useState(" User");
 
   // Use the custom hook to fetch dashboard data
   const { dashboardData, loading, error, refetch } = useClientDashboard();
@@ -209,6 +225,14 @@ const UserDashboard = () => {
           </Typography>
         </Box>
       </DashboardHeader>
+
+      {/* Recommended Services section - moved above stats */}
+      <Box mb={4}>
+        <Typography variant="h5" component="h2" fontWeight="bold" gutterBottom>
+          Recommended Services
+        </Typography>
+        <RecommendedServices />
+      </Box>
 
       {/* Metrics Grid */}
       <Grid container spacing={3} mb={4}>
@@ -420,7 +444,7 @@ const UserDashboard = () => {
               <Button
                 variant="text"
                 color="primary"
-                onClick={() => navigate("/my-bookings")}
+                onClick={() => navigate("/dashboard/my-bookings")}
                 startIcon={<BookOnlineIcon />}
               >
                 View All Bookings
@@ -430,6 +454,118 @@ const UserDashboard = () => {
         </Grid>
       </Grid>
     </Box>
+  );
+};
+
+// Recommended Services Component
+const RecommendedServices = () => {
+  const { services, loading } = useServices(3); // Get 3 recommended services
+  const navigate = useNavigate();
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" p={3}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!services || services.length === 0) {
+    return (
+      <Box p={3} textAlign="center">
+        <Typography variant="body1" color="text.secondary">
+          No recommended services available
+        </Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <>
+      <Grid container spacing={3} mb={2}>
+        {services.map((service) => (
+          <Grid item xs={12} sm={6} md={4} key={service.id}>
+            <Card
+              sx={{
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                transition: "transform 0.3s, box-shadow 0.3s",
+                "&:hover": {
+                  transform: "translateY(-5px)",
+                  boxShadow: (theme) => theme.shadows[8],
+                },
+              }}
+            >
+              <CardMedia
+                component="div"
+                sx={{
+                  height: 140,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  bgcolor: "rgba(0, 0, 0, 0.04)",
+                }}
+              >
+                <BusinessCenterIcon
+                  sx={{ fontSize: 60, color: "rgba(0, 0, 0, 0.2)" }}
+                />
+              </CardMedia>
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Typography variant="h6" component="h3" gutterBottom>
+                  {service.title}
+                </Typography>
+                <Chip
+                  label={service.category}
+                  size="small"
+                  sx={{ mb: 1.5 }}
+                  color="primary"
+                />
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  paragraph
+                  sx={{
+                    display: "-webkit-box",
+                    overflow: "hidden",
+                    WebkitBoxOrient: "vertical",
+                    WebkitLineClamp: 2,
+                  }}
+                >
+                  {service.description}
+                </Typography>
+                <Typography variant="h6" color="primary.main" fontWeight="bold">
+                  ETB {service.price?.toLocaleString()}
+                </Typography>
+              </CardContent>
+              <CardActions
+                sx={{ justifyContent: "space-between", px: 2, pb: 2 }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  {service.vendor?.businessName}
+                </Typography>
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={() => navigate(`/dashboard/booking/${service.id}`)}
+                >
+                  Book Now
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+      <Box display="flex" justifyContent="center" mt={1}>
+        <Button
+          variant="outlined"
+          endIcon={<ArrowForwardIcon />}
+          onClick={() => navigate("/dashboard/services")}
+        >
+          View All Services
+        </Button>
+      </Box>
+    </>
   );
 };
 

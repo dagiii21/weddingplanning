@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import { clientService } from "../services/api";
 
 // Default fallback services if none are found in the backend
 const fallbackServices = [
@@ -33,7 +33,19 @@ const fallbackServices = [
   },
 ];
 
-const useServices = () => {
+// Map service category to an appropriate icon
+const getCategoryIcon = (category) => {
+  const icons = {
+    Bronze: "🥉",
+    Silver: "🥈",
+    Gold: "🥇",
+    Platinum: "💎",
+    // Add more category to icon mappings as needed
+  };
+  return icons[category] || "🎁";
+};
+
+const useServices = (limit = 6) => {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -42,16 +54,35 @@ const useServices = () => {
     const fetchServices = async () => {
       try {
         setLoading(true);
-        // Replace with your actual API endpoint or somthing else here
-        const response = await axios.get("/api/services");
+        // Use clientService to fetch real services
+        const response = await clientService.getServices({
+          limit: limit,
+          page: 1,
+          sortBy: "price",
+          sortOrder: "asc",
+        });
 
         if (
           response.data &&
-          Array.isArray(response.data) &&
-          response.data.length > 0
+          response.data.services &&
+          Array.isArray(response.data.services) &&
+          response.data.services.length > 0
         ) {
-          setServices(response.data);
+          // Transform the data to match our component's expectations
+          const formattedServices = response.data.services.map((service) => ({
+            id: service.id,
+            icon: getCategoryIcon(service.category),
+            title: service.name,
+            description: service.description,
+            price: service.price,
+            category: service.category,
+            vendor: service.vendor,
+            // You could use a placeholder image or create a pattern based on category
+            image: `/image/service-${service.category.toLowerCase()}.jpg`,
+          }));
+          setServices(formattedServices);
         } else {
+          console.log("No services found, using fallback data");
           setServices(fallbackServices);
         }
       } catch (err) {
@@ -64,7 +95,7 @@ const useServices = () => {
     };
 
     fetchServices();
-  }, []);
+  }, [limit]);
 
   return { services, loading, error };
 };

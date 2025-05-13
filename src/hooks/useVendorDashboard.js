@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { vendorService } from "../services/api";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 /**
@@ -8,88 +9,66 @@ import { toast } from "react-toastify";
  * @returns {Object} Dashboard data and loading state
  */
 const useVendorDashboard = () => {
-  const [dashboardData, setDashboardData] = useState({
-    vendorId: "",
-    businessName: "",
-    serviceType: "",
-    rating: 0,
-    totalBookings: 0,
-    pendingBookings: { count: 0, data: [] },
-    confirmedBookings: { count: 0, data: [] },
-    completedBookings: { count: 0, data: [] },
-    allBookings: { count: 0, data: [] },
-    revenue: { total: 0, currency: "ETB", breakdown: [] },
-    chatsToday: 0,
-    servicesCount: 0,
-  });
+  const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const response = await vendorService.getDashboardData();
+      const response = await vendorService.getDashboardOverview();
 
-      console.log("API Response:", response);
+      if (response && response.success) {
+        setDashboardData(response.data);
 
-      // Safely access response data, using empty object as fallback
-      const apiData = response?.data || {};
+        // Check if vendor is not approved and show message
+        if (response.data.status && response.data.status !== "APPROVED") {
+          toast.info(
+            response.data.message || "Your account is pending approval",
+            {
+              position: "top-right",
+              autoClose: 5000,
+            }
+          );
+        }
+      } else {
+        throw new Error("Failed to fetch dashboard data");
+      }
+    } catch (error) {
+      console.error("Dashboard data fetch error:", error);
+      setError(
+        error.message || "An error occurred while fetching dashboard data"
+      );
 
-      console.log("API Data:", apiData);
-
-      // Ensure proper structure with default values for nested properties
-      const data = {
-        ...dashboardData, // Start with default values
-        ...apiData, // Overwrite with API response
-        // Ensure nested objects exist with defaults
-        pendingBookings: {
-          count: apiData.pendingBookings?.count || 0,
-          data: apiData.pendingBookings?.data || [],
-        },
-        confirmedBookings: {
-          count: apiData.confirmedBookings?.count || 0,
-          data: apiData.confirmedBookings?.data || [],
-        },
-        completedBookings: {
-          count: apiData.completedBookings?.count || 0,
-          data: apiData.completedBookings?.data || [],
-        },
-        allBookings: {
-          count: apiData.allBookings?.count || 0,
-          data: apiData.allBookings?.data || [],
-        },
-        revenue: {
-          total: apiData.revenue?.total || 0,
-          currency: apiData.revenue?.currency || "ETB",
-          breakdown: apiData.revenue?.breakdown || [],
-        },
-      };
-
-      console.log("Processed Data:", data);
-
-      setDashboardData(data);
-      setError(null);
-    } catch (err) {
-      console.error("Error fetching vendor dashboard data:", err);
-      setError(err.message || "Failed to load dashboard data");
-      toast.error("Could not load dashboard data. Please try again later.");
+      // Check if the error is related to unauthorized access or vendor status
+      if (error.response && error.response.status === 403) {
+        // Navigate to login if unauthorized
+        if (
+          error.response.data &&
+          error.response.data.status === "PENDING_APPROVAL"
+        ) {
+          toast.warning("Your vendor account is pending approval.");
+        } else if (
+          error.response.data &&
+          error.response.data.status === "SUSPENDED"
+        ) {
+          toast.error(
+            "Your vendor account has been suspended. Please contact support."
+          );
+        }
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
-  // Load dashboard data on component mount
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [fetchDashboardData]);
 
-  // Return values and methods to use in components
-  return {
-    dashboardData,
-    loading,
-    error,
-    refetch: fetchDashboardData,
-  };
+  return { dashboardData, loading, error, refetch: fetchDashboardData };
 };
 
 export default useVendorDashboard;

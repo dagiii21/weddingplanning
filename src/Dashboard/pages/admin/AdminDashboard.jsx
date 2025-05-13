@@ -384,7 +384,7 @@ const Dashboard = () => {
               <Button
                 variant="text"
                 color="primary"
-                onClick={() => navigate("/dashboard/payments")}
+                onClick={() => navigate("/dashboard/payment")}
               >
                 View All Payments
               </Button>

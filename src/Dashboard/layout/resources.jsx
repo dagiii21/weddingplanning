@@ -8,7 +8,7 @@ import VendorIcon from "@mui/icons-material/Store";
 import ChartIcon from "@mui/icons-material/BarChart";
 import user from "@mui/icons-material/Person";
 import feedback from "@mui/icons-material/Feedback";
-import payemnt from "@mui/icons-material/Payment";
+import payment from "@mui/icons-material/Payment";
 import BookOnlineIcon from "@mui/icons-material/BookOnline";
 
 // Import components from the pages folder
@@ -47,12 +47,12 @@ import UserServiceList from "../pages/user/services/ServiceList";
 
 import userCreate from "../pages/admin/user/userCreate";
 import userEdit from "../pages/admin/user/userEdit";
-import userList from "../pages/admin/user/userList";
+import UserList from "../pages/admin/user/userList";
 import feedbackList from "../pages/admin/feedback/feedbacklist";
-import payemntList from "../pages/admin/payment/payementList";
+import PaymentList from "../pages/admin/payment/PaymentList";
 
 import MyBookingsList from "../pages/user/MyBookings/MyBookingsList";
-import PaymentList from "../pages/user/payment/PaymentList";
+import UserPaymentList from "../pages/user/payment/PaymentList";
 import PaymentStatus from "../pages/user/payment/PaymentStatus";
 import VendorListOne from "../pages/eventplanner/Vendor/VendorList";
 import userListOne from "../pages/eventplanner/user/userList";
@@ -97,7 +97,7 @@ export const adminResources = [
     name: "user",
     label: "user",
     icon: user,
-    list: userList,
+    list: UserList,
     edit: userEdit,
     create: userCreate,
   },
@@ -108,10 +108,10 @@ export const adminResources = [
     list: feedbackList,
   },
   {
-    name: "payemnt",
-    label: "Payemnt",
-    icon: payemnt,
-    list: payemntList,
+    name: "payment",
+    label: "Payments",
+    icon: payment,
+    list: PaymentList,
   },
   {
     name: "password",
@@ -148,9 +148,9 @@ export const eventPlannerResources = [
     list: feedbackListOne,
   },
   {
-    name: "payemnt",
-    label: "Payemnt",
-    icon: payemnt,
+    name: "payment",
+    label: "Payments",
+    icon: payment,
     list: payemntListOne,
   },
   {
@@ -187,7 +187,7 @@ export const vendorResources = [
   {
     name: "payments",
     label: "Payments",
-    icon: payemnt,
+    icon: payment,
     list: PaymentDashboard,
   },
   {
@@ -215,8 +215,8 @@ export const userResources = [
   {
     name: "payments",
     label: "Payments",
-    icon: payemnt,
-    list: PaymentList,
+    icon: payment,
+    list: UserPaymentList,
   },
   // {
   //   name: "payment/status",

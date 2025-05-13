@@ -123,10 +123,41 @@ const useLogin = () => {
       navigate(redirectPath);
       toast.success("Login successful!");
     } catch (error) {
-      const message =
-        error.response?.data?.message || "Login failed. Please try again.";
-      setLoginError(message);
-      toast.error(message);
+      console.error("Login error:", error);
+
+      // Handle different error scenarios with more specific messages
+      let errorMessage = "Login failed. Please try again.";
+
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 400) {
+          // Handle validation errors or invalid credentials
+          if (data.error === "Invalid credentials.") {
+            errorMessage =
+              "The email or password you entered is incorrect. Please try again.";
+          } else if (data.error === "Email and password are required.") {
+            errorMessage = "Email and password are required.";
+          } else {
+            errorMessage =
+              data.error || data.message || "Invalid login details.";
+          }
+        } else if (status === 401) {
+          errorMessage =
+            "Your account is not authorized. Please contact support.";
+        } else if (status === 403) {
+          errorMessage =
+            "Your account is blocked or inactive. Please contact support.";
+        } else if (status >= 500) {
+          errorMessage = "Server error. Please try again later.";
+        }
+      } else if (error.request) {
+        // Network error
+        errorMessage = "Network error. Please check your internet connection.";
+      }
+
+      setLoginError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

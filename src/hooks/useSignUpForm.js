@@ -70,6 +70,14 @@ const vendorSchema = z
       .refine((val) => val.length === 13, {
         message: "CBE account number must be exactly 13 digits",
       }),
+    tinNumber: z
+      .string()
+      .regex(/^\d{10}$/, {
+        message: "TIN number must be exactly 10 digits",
+      })
+      .refine((val) => val.length === 10, {
+        message: "TIN number must be exactly 10 digits",
+      }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -98,6 +106,7 @@ export const useSignUpForm = () => {
     businessName: "",
     serviceType: "",
     accountNumber: "",
+    tinNumber: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -222,7 +231,13 @@ export const useSignUpForm = () => {
       } else {
         // Clear vendor-specific errors when switching to CLIENT
         setErrors((prev) => {
-          const { businessName, serviceType, accountNumber, ...rest } = prev;
+          const {
+            businessName,
+            serviceType,
+            accountNumber,
+            tinNumber,
+            ...rest
+          } = prev;
           return rest;
         });
       }
@@ -247,6 +262,7 @@ export const useSignUpForm = () => {
         apiData.businessName = userData.businessName;
         apiData.serviceType = userData.serviceType;
         apiData.accountNumber = userData.accountNumber;
+        apiData.tinNumber = userData.tinNumber;
       }
 
       console.log(
@@ -263,29 +279,12 @@ export const useSignUpForm = () => {
       console.log("Registration response:", response.data);
       return response.data;
     } catch (error) {
-      // Handle API errors
-      console.error("Registration error:", error);
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error("Server response error:", error.response.data);
-        console.error("Status code:", error.response.status);
-        const errorMessage =
-          error.response.data.message ||
-          error.response.data.error ||
-          "Registration failed";
-        throw new Error(errorMessage);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error("No response received:", error.request);
-        throw new Error(
-          "No response from server. Please check your internet connection."
-        );
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error("Request setup error:", error.message);
-        throw new Error("Error setting up request. Please try again.");
-      }
+      console.error("Error in registration:", error.response?.data || error);
+      throw new Error(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Registration failed. Please try again."
+      );
     }
   };
 
@@ -332,6 +331,7 @@ export const useSignUpForm = () => {
           businessName: "",
           serviceType: "",
           accountNumber: "",
+          tinNumber: "",
         });
 
         // If token is returned, store it
