@@ -24,6 +24,7 @@ import {
   CircularProgress,
   Pagination,
   Stack,
+  Tooltip,
 } from "@mui/material";
 import {
   Visibility as VisibilityIcon,
@@ -32,6 +33,94 @@ import {
   Done as DoneIcon,
 } from "@mui/icons-material";
 import useVendorBookings from "../../../../hooks/useVendorBookings";
+
+// Service Tier Chip component
+const TierChip = ({ tier }) => {
+  // Get appropriate color for the tier
+  const getTierColor = (tier) => {
+    if (!tier) return "#4caf50";
+
+    switch (tier) {
+      case "PLATINUM":
+        return "#e5e4e2"; // Platinum color
+      case "GOLD":
+        return "#ffd700"; // Gold color
+      case "SILVER":
+        return "#c0c0c0"; // Silver color
+      case "BRONZE":
+        return "#cd7f32"; // Bronze color
+      default:
+        return "#4caf50"; // Green for others
+    }
+  };
+
+  // Get appropriate text color for the tier
+  const getTextColor = (tier) => {
+    if (!tier) return "#fff";
+    return tier === "PLATINUM" || tier === "SILVER" ? "#000" : "#fff";
+  };
+
+  // Format tier text for display
+  const formatTier = (text) => {
+    if (!text) return "Standard";
+    return text.charAt(0) + text.slice(1).toLowerCase();
+  };
+
+  const color = getTierColor(tier);
+  const textColor = getTextColor(tier);
+
+  return (
+    <Chip
+      label={formatTier(tier)}
+      style={{
+        backgroundColor: color,
+        color: textColor,
+      }}
+      size="small"
+    />
+  );
+};
+
+// Format date to a more readable format
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+};
+
+// Get appropriate status chip with color
+const getStatusChip = (status) => {
+  let color;
+  let icon;
+
+  switch (status) {
+    case "PENDING":
+      color = "warning";
+      break;
+    case "CONFIRMED":
+      color = "info";
+      break;
+    case "COMPLETED":
+      color = "success";
+      break;
+    case "CANCELLED":
+      color = "error";
+      break;
+    default:
+      color = "default";
+  }
+
+  return (
+    <Chip
+      label={status.charAt(0) + status.slice(1).toLowerCase()}
+      color={color}
+      size="small"
+    />
+  );
+};
 
 const BookingList = () => {
   const navigate = useNavigate();
@@ -45,6 +134,9 @@ const BookingList = () => {
     cancelBooking,
     completeBooking,
   } = useVendorBookings();
+
+  // Make sure bookings is always an array even if it's null or undefined
+  const safeBookings = bookings || [];
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
@@ -74,95 +166,57 @@ const BookingList = () => {
   const handleConfirmBooking = async (bookingId) => {
     try {
       await confirmBooking(bookingId);
-      // Refresh the list
-      fetchBookings({
-        page,
-        limit,
-        status: statusFilter !== "all" ? statusFilter : undefined,
-      });
-    } catch (err) {
-      console.error("Error confirming booking:", err);
+    } catch (error) {
+      console.error("Error confirming booking:", error);
     }
   };
 
-  const handleCancelClick = (booking) => {
+  const handleOpenCancelDialog = (booking) => {
     setSelectedBooking(booking);
     setCancelDialogOpen(true);
   };
 
-  const handleCancelConfirm = async () => {
+  const handleCloseCancelDialog = () => {
+    setCancelDialogOpen(false);
+    setCancellationReason("");
+    setSelectedBooking(null);
+  };
+
+  const handleSubmitCancellation = async () => {
     if (!selectedBooking || !cancellationReason.trim()) return;
 
     try {
       await cancelBooking(selectedBooking.id, cancellationReason);
-      // Refresh the list
-      fetchBookings({
-        page,
-        limit,
-        status: statusFilter !== "all" ? statusFilter : undefined,
-      });
-      // Close dialog
-      setCancelDialogOpen(false);
-      setSelectedBooking(null);
-      setCancellationReason("");
-    } catch (err) {
-      console.error("Error cancelling booking:", err);
+      handleCloseCancelDialog();
+    } catch (error) {
+      console.error("Error cancelling booking:", error);
     }
   };
 
   const handleCompleteBooking = async (bookingId) => {
     try {
       await completeBooking(bookingId);
-      // Refresh the list
-      fetchBookings({
-        page,
-        limit,
-        status: statusFilter !== "all" ? statusFilter : undefined,
-      });
-    } catch (err) {
-      console.error("Error completing booking:", err);
+    } catch (error) {
+      console.error("Error completing booking:", error);
     }
   };
 
-  const handleStatusChange = (event, newValue) => {
+  const handleChangeStatusFilter = (event, newValue) => {
     setStatusFilter(newValue);
-    setPage(1); // Reset to first page when changing filters
+    setPage(1); // Reset to first page when filter changes
   };
 
-  const handlePageChange = (event, value) => {
-    setPage(value);
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
   };
 
-  const getStatusChip = (status) => {
-    switch (status) {
-      case "PENDING":
-        return <Chip label="Pending" color="warning" size="small" />;
-      case "CONFIRMED":
-        return <Chip label="Confirmed" color="primary" size="small" />;
-      case "COMPLETED":
-        return <Chip label="Completed" color="success" size="small" />;
-      case "CANCELLED":
-        return <Chip label="Cancelled" color="error" size="small" />;
-      default:
-        return <Chip label={status} size="small" />;
-    }
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  if (loading && !bookings.length) {
+  if (loading && safeBookings.length === 0) {
     return (
       <Box
         display="flex"
         justifyContent="center"
         alignItems="center"
-        height="70vh"
+        height="400px"
       >
         <CircularProgress />
       </Box>
@@ -172,15 +226,14 @@ const BookingList = () => {
   if (error) {
     return (
       <Box p={3}>
-        <Typography color="error" variant="h6">
+        <Typography variant="h6" color="error" gutterBottom>
           {error}
         </Typography>
         <Button
           variant="contained"
-          onClick={() => fetchBookings()}
-          sx={{ mt: 2 }}
+          onClick={() => fetchBookings({ page, limit, status: statusFilter })}
         >
-          Try Again
+          Retry
         </Button>
       </Box>
     );
@@ -188,25 +241,25 @@ const BookingList = () => {
 
   return (
     <Box p={3}>
-      <Typography variant="h5" component="h1" gutterBottom>
+      <Typography variant="h5" component="h1" gutterBottom fontWeight="bold">
         Manage Bookings
       </Typography>
 
-      {/* Status Filter Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+      {/* Status Tabs */}
+      <Paper sx={{ mb: 3 }}>
         <Tabs
           value={statusFilter}
-          onChange={handleStatusChange}
+          onChange={handleChangeStatusFilter}
           indicatorColor="primary"
           textColor="primary"
         >
-          <Tab label="All Bookings" value="all" />
-          <Tab label="Pending" value="PENDING" />
-          <Tab label="Confirmed" value="CONFIRMED" />
-          <Tab label="Completed" value="COMPLETED" />
-          <Tab label="Cancelled" value="CANCELLED" />
+          <Tab value="all" label="All" />
+          <Tab value="PENDING" label="Pending" />
+          <Tab value="CONFIRMED" label="Confirmed" />
+          <Tab value="COMPLETED" label="Completed" />
+          <Tab value="CANCELLED" label="Cancelled" />
         </Tabs>
-      </Box>
+      </Paper>
 
       {/* Bookings Table */}
       <TableContainer component={Paper} variant="outlined">
@@ -215,28 +268,46 @@ const BookingList = () => {
             <TableRow>
               <TableCell>Booking ID</TableCell>
               <TableCell>Service</TableCell>
+              <TableCell>Package</TableCell>
               <TableCell>Client</TableCell>
               <TableCell>Event Date</TableCell>
-              <TableCell>Amount</TableCell>
+              <TableCell>Price</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {bookings.length > 0 ? (
-              bookings.map((booking) => (
+            {safeBookings.length > 0 ? (
+              safeBookings.map((booking) => (
                 <TableRow key={booking.id}>
                   <TableCell>{booking.id.substring(0, 8)}...</TableCell>
-                  <TableCell>{booking.service.name}</TableCell>
                   <TableCell>
-                    {booking.client.user.firstName}{" "}
-                    {booking.client.user.lastName}
+                    {booking.service?.name || "Unnamed Service"}
+                  </TableCell>
+                  <TableCell>
+                    <TierChip
+                      tier={booking.tier?.tier || booking.selectedTier}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    {booking.client?.user
+                      ? `${booking.client.user.firstName || ""} ${
+                          booking.client.user.lastName || ""
+                        }`.trim()
+                      : "Unknown Client"}
                   </TableCell>
                   <TableCell>{formatDate(booking.eventDate)}</TableCell>
                   <TableCell>
-                    ETB {booking.service.price.toLocaleString()}
+                    ETB{" "}
+                    {(
+                      booking.tier?.price ||
+                      booking.service?.basePrice ||
+                      0
+                    ).toLocaleString()}
                   </TableCell>
-                  <TableCell>{getStatusChip(booking.status)}</TableCell>
+                  <TableCell>
+                    {getStatusChip(booking.status || "PENDING")}
+                  </TableCell>
                   <TableCell>
                     <Box display="flex" gap={1}>
                       <IconButton
@@ -249,35 +320,40 @@ const BookingList = () => {
                       </IconButton>
 
                       {booking.status === "PENDING" && (
-                        <>
+                        <Tooltip title="Confirm Booking">
                           <IconButton
                             size="small"
-                            color="success"
+                            color="info"
                             onClick={() => handleConfirmBooking(booking.id)}
-                            title="Confirm Booking"
                           >
                             <CheckCircleIcon fontSize="small" />
                           </IconButton>
+                        </Tooltip>
+                      )}
+
+                      {(booking.status === "PENDING" ||
+                        booking.status === "CONFIRMED") && (
+                        <Tooltip title="Cancel Booking">
                           <IconButton
                             size="small"
                             color="error"
-                            onClick={() => handleCancelClick(booking)}
-                            title="Cancel Booking"
+                            onClick={() => handleOpenCancelDialog(booking)}
                           >
                             <CancelIcon fontSize="small" />
                           </IconButton>
-                        </>
+                        </Tooltip>
                       )}
 
                       {booking.status === "CONFIRMED" && (
-                        <IconButton
-                          size="small"
-                          color="success"
-                          onClick={() => handleCompleteBooking(booking.id)}
-                          title="Mark as Completed"
-                        >
-                          <DoneIcon fontSize="small" />
-                        </IconButton>
+                        <Tooltip title="Mark as Completed">
+                          <IconButton
+                            size="small"
+                            color="success"
+                            onClick={() => handleCompleteBooking(booking.id)}
+                          >
+                            <DoneIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                       )}
                     </Box>
                   </TableCell>
@@ -285,8 +361,8 @@ const BookingList = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} align="center">
-                  <Typography variant="body1" py={2}>
+                <TableCell colSpan={8} align="center">
+                  <Typography variant="body1" color="textSecondary" p={3}>
                     No bookings found
                   </Typography>
                 </TableCell>
@@ -298,52 +374,39 @@ const BookingList = () => {
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (
-        <Stack
-          direction="row"
-          spacing={2}
-          justifyContent="center"
-          alignItems="center"
-          sx={{ mt: 3 }}
-        >
+        <Stack spacing={2} sx={{ mt: 2, alignItems: "center" }}>
           <Pagination
             count={pagination.totalPages}
             page={page}
-            onChange={handlePageChange}
+            onChange={handleChangePage}
             color="primary"
           />
         </Stack>
       )}
 
       {/* Cancellation Dialog */}
-      <Dialog
-        open={cancelDialogOpen}
-        onClose={() => setCancelDialogOpen(false)}
-      >
+      <Dialog open={cancelDialogOpen} onClose={handleCloseCancelDialog}>
         <DialogTitle>Cancel Booking</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Please provide a reason for cancelling this booking. The client will
-            be notified.
+          <DialogContentText gutterBottom>
+            Please provide a reason for cancellation:
           </DialogContentText>
           <TextField
             autoFocus
             margin="dense"
             label="Cancellation Reason"
-            type="text"
             fullWidth
             multiline
             rows={3}
             value={cancellationReason}
             onChange={(e) => setCancellationReason(e.target.value)}
-            required
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCancelDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleCloseCancelDialog}>Cancel</Button>
           <Button
-            onClick={handleCancelConfirm}
+            onClick={handleSubmitCancellation}
             color="error"
-            variant="contained"
             disabled={!cancellationReason.trim()}
           >
             Confirm Cancellation

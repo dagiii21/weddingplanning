@@ -16,29 +16,64 @@ import {
   MenuItem,
   CircularProgress,
   Chip,
+  Divider,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  InputAdornment,
+  FormHelperText,
+  FormControl,
+  InputLabel,
+  Select,
 } from "@mui/material";
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  AddCircleOutline as AddCircleOutlineIcon,
+  Delete as RemoveIcon,
 } from "@mui/icons-material";
 import useVendorServices from "../../../../hooks/useVendorServices";
 
-const SERVICE_CATEGORIES = ["Bronze", "Silver", "Gold", "Platinum"];
+// Define service categories
+const SERVICE_CATEGORIES = ["Wedding", "Birthday", "Corporate", "Other"];
+
+// Define service tiers
+const SERVICE_TIERS = ["BRONZE", "SILVER", "GOLD", "PLATINUM"];
 
 // Helper function to get category color
 const getCategoryColor = (category) => {
   switch (category) {
-    case "Bronze":
-      return "default";
-    case "Silver":
-      return "secondary";
-    case "Gold":
-      return "warning";
-    case "Platinum":
+    case "Wedding":
       return "primary";
+    case "Birthday":
+      return "secondary";
+    case "Corporate":
+      return "warning";
+    case "Other":
+      return "default";
     default:
       return "default";
+  }
+};
+
+// Helper function to get tier color
+const getTierColor = (tier) => {
+  switch (tier) {
+    case "BRONZE":
+      return "#cd7f32"; // Bronze color
+    case "SILVER":
+      return "#c0c0c0"; // Silver color
+    case "GOLD":
+      return "#ffd700"; // Gold color
+    case "PLATINUM":
+      return "#e5e4e2"; // Platinum color
+    default:
+      return "#4caf50"; // Default green
   }
 };
 
@@ -60,8 +95,14 @@ const ServiceList = () => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    price: "",
+    basePrice: "",
     category: "",
+    tiers: [
+      { tier: "BRONZE", price: "", description: "Basic package" },
+      { tier: "SILVER", price: "", description: "Standard package" },
+      { tier: "GOLD", price: "", description: "Premium package" },
+      { tier: "PLATINUM", price: "", description: "Ultimate package" },
+    ],
   });
 
   useEffect(() => {
@@ -70,47 +111,60 @@ const ServiceList = () => {
 
   const handleOpen = (service = null) => {
     if (service) {
-      setEditingService(service);
+      // For editing - if tiers aren't available yet, create default ones
+      const serviceTiers =
+        service.tiers && service.tiers.length > 0
+          ? service.tiers
+          : SERVICE_TIERS.map((tier, index) => ({
+              tier,
+              price: service.basePrice + index * 1000, // Simple default pricing
+              description: `${
+                tier.charAt(0) + tier.slice(1).toLowerCase()
+              } package`,
+            }));
+
       setFormData({
         title: service.title,
         description: service.description,
-        price: service.price.toString(),
+        basePrice: service.basePrice.toString(),
         category: service.category,
+        tiers: serviceTiers,
       });
+      setEditingService(service);
     } else {
-      setEditingService(null);
+      // For adding new service
       setFormData({
         title: "",
         description: "",
-        price: "",
+        basePrice: "",
         category: "",
+        tiers: [
+          { tier: "BRONZE", price: "", description: "Basic package" },
+          { tier: "SILVER", price: "", description: "Standard package" },
+          { tier: "GOLD", price: "", description: "Premium package" },
+          { tier: "PLATINUM", price: "", description: "Ultimate package" },
+        ],
       });
+      setEditingService(null);
     }
     setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
+    setFormData({
+      title: "",
+      description: "",
+      basePrice: "",
+      category: "",
+      tiers: [
+        { tier: "BRONZE", price: "", description: "Basic package" },
+        { tier: "SILVER", price: "", description: "Standard package" },
+        { tier: "GOLD", price: "", description: "Premium package" },
+        { tier: "PLATINUM", price: "", description: "Ultimate package" },
+      ],
+    });
     setEditingService(null);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const serviceData = {
-        ...formData,
-        price: parseFloat(formData.price),
-      };
-
-      if (editingService) {
-        await updateService(editingService.serviceId, serviceData);
-      } else {
-        await addService(serviceData);
-      }
-      handleClose();
-    } catch (err) {
-      console.error("Failed to save service:", err);
-    }
   };
 
   const handleDeleteClick = (service) => {
@@ -133,6 +187,62 @@ const ServiceList = () => {
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
     setServiceToDelete(null);
+  };
+
+  const handleUpdateTierField = (index, field, value) => {
+    const updatedTiers = [...formData.tiers];
+    updatedTiers[index] = { ...updatedTiers[index], [field]: value };
+    setFormData({ ...formData, tiers: updatedTiers });
+  };
+
+  const validateForm = () => {
+    // Basic validation
+    if (!formData.title || !formData.basePrice || !formData.category) {
+      return false;
+    }
+
+    // Validate each tier has a price
+    if (
+      !formData.tiers.every((tier) => tier.price && parseFloat(tier.price) > 0)
+    ) {
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      alert(
+        "Please fill in all required fields and ensure all tiers have valid prices."
+      );
+      return;
+    }
+
+    try {
+      const serviceData = {
+        title: formData.title,
+        description: formData.description,
+        basePrice: parseFloat(formData.basePrice),
+        category: formData.category,
+        tiers: formData.tiers.map((tier) => ({
+          tier: tier.tier,
+          price: parseFloat(tier.price),
+          description: tier.description,
+        })),
+      };
+
+      if (editingService) {
+        await updateService(editingService.serviceId, serviceData);
+      } else {
+        await addService(serviceData);
+      }
+      handleClose();
+    } catch (err) {
+      console.error("Failed to save service:", err);
+    }
   };
 
   if (loading && !services.length) {
@@ -200,9 +310,38 @@ const ServiceList = () => {
                 <Typography variant="body2" paragraph>
                   {service.description}
                 </Typography>
-                <Typography variant="h6" color="primary">
-                  ETB {service.price.toLocaleString()}
+                <Typography variant="subtitle2" color="text.secondary">
+                  Base Price: ETB {service.basePrice.toLocaleString()}
                 </Typography>
+
+                {/* Display service tiers */}
+                {service.tiers && service.tiers.length > 0 && (
+                  <Box mt={2}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Available Packages:
+                    </Typography>
+                    <Box display="flex" flexWrap="wrap" gap={1}>
+                      {service.tiers.map((tier) => (
+                        <Chip
+                          key={tier.id}
+                          label={`${
+                            tier.tier.charAt(0) +
+                            tier.tier.slice(1).toLowerCase()
+                          }: ETB ${tier.price.toLocaleString()}`}
+                          size="small"
+                          style={{
+                            backgroundColor: getTierColor(tier.tier),
+                            color:
+                              tier.tier === "PLATINUM" || tier.tier === "SILVER"
+                                ? "#000"
+                                : "#fff",
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+
                 <Box display="flex" justifyContent="flex-end" mt={2}>
                   <IconButton
                     size="small"
@@ -225,92 +364,194 @@ const ServiceList = () => {
         ))}
       </Grid>
 
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete{" "}
+            <strong>{serviceToDelete?.title}</strong>? This action cannot be
+            undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Service Add/Edit Dialog */}
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
         <DialogTitle>
           {editingService ? "Edit Service" : "Add New Service"}
         </DialogTitle>
         <form onSubmit={handleSubmit}>
           <DialogContent>
-            <TextField
-              fullWidth
-              label="Title"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
-              margin="normal"
-              required
-            />
-            <TextField
-              fullWidth
-              label="Description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              margin="normal"
-              multiline
-              rows={3}
-            />
-            <TextField
-              fullWidth
-              label="Price (ETB)"
-              type="number"
-              value={formData.price}
-              onChange={(e) =>
-                setFormData({ ...formData, price: e.target.value })
-              }
-              margin="normal"
-              required
-            />
-            <TextField
-              fullWidth
-              select
-              label="Category"
-              value={formData.category}
-              onChange={(e) =>
-                setFormData({ ...formData, category: e.target.value })
-              }
-              margin="normal"
-              required
-            >
-              {SERVICE_CATEGORIES.map((category) => (
-                <MenuItem key={category} value={category}>
-                  {category}
-                </MenuItem>
-              ))}
-            </TextField>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Title"
+                  value={formData.title}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
+                  margin="normal"
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Base Price (ETB)"
+                  type="number"
+                  value={formData.basePrice}
+                  onChange={(e) =>
+                    setFormData({ ...formData, basePrice: e.target.value })
+                  }
+                  margin="normal"
+                  required
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">ETB</InputAdornment>
+                    ),
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Description"
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  margin="normal"
+                  multiline
+                  rows={3}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth margin="normal" required>
+                  <InputLabel>Category</InputLabel>
+                  <Select
+                    value={formData.category}
+                    label="Category"
+                    onChange={(e) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
+                  >
+                    {SERVICE_CATEGORIES.map((category) => (
+                      <MenuItem key={category} value={category}>
+                        {category}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            </Grid>
+
+            <Box mt={3}>
+              <Typography variant="h6" gutterBottom>
+                Service Packages
+              </Typography>
+              <Typography variant="body2" color="text.secondary" paragraph>
+                Define pricing and features for each package tier. Clients will
+                select one of these when booking.
+              </Typography>
+
+              <TableContainer component={Paper} variant="outlined">
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Package Tier</TableCell>
+                      <TableCell>Price (ETB)</TableCell>
+                      <TableCell>Description</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {formData.tiers.map((tier, index) => (
+                      <TableRow key={tier.tier}>
+                        <TableCell>
+                          <Chip
+                            label={
+                              tier.tier.charAt(0) +
+                              tier.tier.slice(1).toLowerCase()
+                            }
+                            style={{
+                              backgroundColor: getTierColor(tier.tier),
+                              color:
+                                tier.tier === "PLATINUM" ||
+                                tier.tier === "SILVER"
+                                  ? "#000"
+                                  : "#fff",
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <TextField
+                            size="small"
+                            type="number"
+                            value={tier.price}
+                            onChange={(e) =>
+                              handleUpdateTierField(
+                                index,
+                                "price",
+                                e.target.value
+                              )
+                            }
+                            required
+                            fullWidth
+                            InputProps={{
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  ETB
+                                </InputAdornment>
+                              ),
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <TextField
+                            size="small"
+                            value={tier.description}
+                            onChange={(e) =>
+                              handleUpdateTierField(
+                                index,
+                                "description",
+                                e.target.value
+                              )
+                            }
+                            fullWidth
+                            placeholder="Describe what's included in this package"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <FormHelperText>
+                All package tiers must have a valid price. Bronze should be the
+                most basic package, while Platinum should be the premium
+                offering.
+              </FormHelperText>
+            </Box>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>Cancel</Button>
-            <Button type="submit" variant="contained" color="primary">
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={!validateForm()}
+            >
               {editingService ? "Update" : "Add"} Service
             </Button>
           </DialogActions>
         </form>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleDeleteCancel}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">Confirm Deletion</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            Are you sure you want to delete the service "
-            {serviceToDelete?.title}"? This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel}>Cancel</Button>
-          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
-            Delete
-          </Button>
-        </DialogActions>
       </Dialog>
     </Box>
   );

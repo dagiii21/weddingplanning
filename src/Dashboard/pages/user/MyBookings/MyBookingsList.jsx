@@ -90,6 +90,53 @@ const PackageChip = ({ category }) => {
   );
 };
 
+// Service Tier Chip Component
+const TierChip = ({ tier }) => {
+  // Get appropriate color for the tier
+  const getTierColor = (tier) => {
+    if (!tier) return "#4caf50";
+
+    switch (tier) {
+      case "PLATINUM":
+        return "#e5e4e2"; // Platinum color
+      case "GOLD":
+        return "#ffd700"; // Gold color
+      case "SILVER":
+        return "#c0c0c0"; // Silver color
+      case "BRONZE":
+        return "#cd7f32"; // Bronze color
+      default:
+        return "#4caf50"; // Green for others
+    }
+  };
+
+  // Get appropriate text color for the tier
+  const getTextColor = (tier) => {
+    if (!tier) return "#fff";
+    return tier === "PLATINUM" || tier === "SILVER" ? "#000" : "#fff";
+  };
+
+  // Format tier text for display
+  const formatTier = (text) => {
+    if (!text) return "Standard";
+    return text.charAt(0) + text.slice(1).toLowerCase();
+  };
+
+  const color = getTierColor(tier);
+  const textColor = getTextColor(tier);
+
+  return (
+    <Chip
+      label={formatTier(tier)}
+      style={{
+        backgroundColor: color,
+        color: textColor,
+      }}
+      size="small"
+    />
+  );
+};
+
 const MyBookingsList = () => {
   // Use the custom hook to fetch and manage bookings
   const {
@@ -218,18 +265,29 @@ const MyBookingsList = () => {
             ) : (
               bookings.map((booking) => (
                 <TableRow key={booking.id}>
-                  <TableCell>{booking.service.name}</TableCell>
-                  <TableCell>{booking.vendor.businessName}</TableCell>
                   <TableCell>
-                    <PackageChip category={booking.service.category} />
+                    {booking.service?.name || "Unnamed Service"}
+                  </TableCell>
+                  <TableCell>
+                    {booking.vendor?.businessName || "Unknown Vendor"}
+                  </TableCell>
+                  <TableCell>
+                    <TierChip
+                      tier={booking.tier?.tier || booking.selectedTier}
+                    />
                   </TableCell>
                   <TableCell>{formatDate(booking.eventDate)}</TableCell>
-                  <TableCell>{booking.location}</TableCell>
+                  <TableCell>{booking.location || "No location"}</TableCell>
                   <TableCell>
-                    ETB {booking.service.price.toLocaleString()}
+                    ETB{" "}
+                    {(
+                      booking.tier?.price ||
+                      booking.service?.basePrice ||
+                      0
+                    ).toLocaleString()}
                   </TableCell>
                   <TableCell>
-                    <StatusChip status={booking.status} />
+                    <StatusChip status={booking.status || "PENDING"} />
                   </TableCell>
                   <TableCell>
                     <Button

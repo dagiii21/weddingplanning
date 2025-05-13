@@ -21,6 +21,7 @@ import {
   Chip,
   CardMedia,
   CardActions,
+  Rating,
 } from "@mui/material";
 
 // Import custom hook for client dashboard data
@@ -480,6 +481,50 @@ const RecommendedServices = () => {
     );
   }
 
+  // Helper function to get the starting price from tiers
+  const getStartingPrice = (service) => {
+    if (!service.tiers || service.tiers.length === 0) {
+      return service.basePrice || service.price || 0;
+    }
+
+    return service.tiers.reduce(
+      (min, tier) => (tier.price < min ? tier.price : min),
+      service.tiers[0].price
+    );
+  };
+
+  // Helper function to get tier chip color
+  const getTierColor = (tier) => {
+    switch (tier) {
+      case "BRONZE":
+        return "#cd7f32"; // Bronze color
+      case "SILVER":
+        return "#c0c0c0"; // Silver color
+      case "GOLD":
+        return "#ffd700"; // Gold color
+      case "PLATINUM":
+        return "#e5e4e2"; // Platinum color
+      default:
+        return "#4caf50"; // Green for others
+    }
+  };
+
+  // Format tier text for display
+  const formatTier = (text) => {
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+  };
+
+  const navigateToBooking = (service) => {
+    // If service has tiers, show a modal or navigate to a page where user can select
+    if (service.tiers && service.tiers.length > 0) {
+      // For simplicity, just navigate to the booking page with a prompt to select tier
+      navigate(`/dashboard/services?highlight=${service.id}`);
+    } else {
+      // If no tiers, navigate directly to booking
+      navigate(`/dashboard/booking/${service.id}`);
+    }
+  };
+
   return (
     <>
       <Grid container spacing={3} mb={2}>
@@ -512,15 +557,21 @@ const RecommendedServices = () => {
                 />
               </CardMedia>
               <CardContent sx={{ flexGrow: 1 }}>
-                <Typography variant="h6" component="h3" gutterBottom>
-                  {service.title}
-                </Typography>
-                <Chip
-                  label={service.category}
-                  size="small"
-                  sx={{ mb: 1.5 }}
-                  color="primary"
-                />
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="flex-start"
+                >
+                  <Typography variant="h6" component="h3" gutterBottom>
+                    {service.title}
+                  </Typography>
+                  <Chip
+                    label={service.category}
+                    size="small"
+                    sx={{ mb: 1.5 }}
+                    color="primary"
+                  />
+                </Box>
                 <Typography
                   variant="body2"
                   color="text.secondary"
@@ -530,24 +581,75 @@ const RecommendedServices = () => {
                     overflow: "hidden",
                     WebkitBoxOrient: "vertical",
                     WebkitLineClamp: 2,
+                    mb: 2,
                   }}
                 >
                   {service.description}
                 </Typography>
-                <Typography variant="h6" color="primary.main" fontWeight="bold">
-                  ETB {service.price?.toLocaleString()}
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Typography
+                    variant="h6"
+                    color="primary.main"
+                    fontWeight="bold"
+                  >
+                    From ETB {getStartingPrice(service).toLocaleString()}
+                  </Typography>
+                  {service.vendor?.rating && (
+                    <Box display="flex" alignItems="center">
+                      <Rating
+                        value={service.vendor.rating}
+                        readOnly
+                        size="small"
+                      />
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        ml={0.5}
+                      >
+                        ({service.vendor.rating})
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+
+                {/* Show available tiers */}
+                {service.tiers && service.tiers.length > 0 && (
+                  <Box mt={1} mb={1}>
+                    <Typography variant="body2" color="text.secondary">
+                      Available as:
+                    </Typography>
+                    <Box display="flex" gap={0.5} mt={0.5} flexWrap="wrap">
+                      {service.tiers.map((tier) => (
+                        <Chip
+                          key={tier.id || tier.tier}
+                          label={formatTier(tier.tier)}
+                          size="small"
+                          style={{
+                            backgroundColor: getTierColor(tier.tier),
+                            color:
+                              tier.tier === "PLATINUM" || tier.tier === "SILVER"
+                                ? "#000"
+                                : "#fff",
+                          }}
+                        />
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+
+                <Typography variant="body2" color="text.secondary" mt={1}>
+                  {service.vendor?.businessName || ""}
                 </Typography>
               </CardContent>
-              <CardActions
-                sx={{ justifyContent: "space-between", px: 2, pb: 2 }}
-              >
-                <Typography variant="body2" color="text.secondary">
-                  {service.vendor?.businessName}
-                </Typography>
+              <CardActions sx={{ justifyContent: "flex-end", p: 2 }}>
                 <Button
                   size="small"
                   variant="contained"
-                  onClick={() => navigate(`/dashboard/booking/${service.id}`)}
+                  onClick={() => navigateToBooking(service)}
                 >
                   Book Now
                 </Button>

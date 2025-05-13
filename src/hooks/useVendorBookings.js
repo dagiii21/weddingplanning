@@ -28,13 +28,23 @@ const useVendorBookings = () => {
       const response = await api.get(
         `/vendor/bookings?${queryParams.toString()}`
       );
-      setBookings(response.data.bookings);
-      setPagination(response.data.pagination);
+
+      // Get bookings from the correct response property
+      const bookingsData = response.data.data || [];
+      setBookings(bookingsData);
+
+      // Make sure pagination exists before setting it
+      if (response.data.pagination) {
+        setPagination(response.data.pagination);
+      }
+
       setError(null);
     } catch (err) {
       console.error("Error fetching bookings:", err);
       setError(err.message || "Failed to fetch bookings");
       toast.error("Could not load bookings. Please try again.");
+      // Set empty bookings array on error
+      setBookings([]);
     } finally {
       setLoading(false);
     }

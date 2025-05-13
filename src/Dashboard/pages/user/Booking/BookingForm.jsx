@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -32,11 +32,14 @@ import MessageIcon from "@mui/icons-material/Message";
 const BookingForm = () => {
   const { serviceId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const tierId = searchParams.get("tierId");
 
   // Service data state
   const [service, setService] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedTier, setSelectedTier] = useState(null);
 
   // Form state
   const [bookingDate, setBookingDate] = useState(null);
@@ -95,6 +98,15 @@ const BookingForm = () => {
 
         if (foundService) {
           setService(foundService);
+
+          // Find the tier if tierId is provided
+          if (tierId && foundService.tiers && foundService.tiers.length > 0) {
+            const tier = foundService.tiers.find((t) => t.id === tierId);
+            if (tier) {
+              setSelectedTier(tier);
+            }
+          }
+
           setError(null);
         } else {
           setError("Service not found");
@@ -111,7 +123,7 @@ const BookingForm = () => {
     if (serviceId) {
       fetchServiceDetails();
     }
-  }, [serviceId]);
+  }, [serviceId, tierId]);
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -136,6 +148,13 @@ const BookingForm = () => {
       return;
     }
 
+    // Check if tier is selected when service has tiers
+    if (service.tiers && service.tiers.length > 0 && !selectedTier && !tierId) {
+      toast.error("Please select a service tier");
+      navigate(`/dashboard/services?highlight=${service.id}`);
+      return;
+    }
+
     setBookingLoading(true);
     try {
       // Create booking data object
@@ -146,6 +165,28 @@ const BookingForm = () => {
         attendees,
         specialRequests,
       };
+
+      // Add tier information if available
+      if (selectedTier) {
+        bookingData.serviceTierPriceId = selectedTier.id;
+        bookingData.selectedTier = selectedTier.tier;
+      } else if (tierId && service.tiers) {
+        // Find tier by ID if not already set
+        const tier = service.tiers.find((t) => t.id === tierId);
+        if (tier) {
+          bookingData.serviceTierPriceId = tier.id;
+          bookingData.selectedTier = tier.tier;
+        }
+      }
+
+      // Final validation for required fields
+      if (!bookingData.serviceTierPriceId || !bookingData.selectedTier) {
+        setBookingLoading(false);
+        toast.error(
+          "Service tier information is missing. Please select a service tier."
+        );
+        return;
+      }
 
       // Create the booking using the API
       const response = await clientService.createBooking(bookingData);
@@ -173,11 +214,21 @@ const BookingForm = () => {
   const initiatePaymentForBooking = async (booking) => {
     setPaymentLoading(true);
     try {
-      // Prepare payment data
+      // Get user data
+      const userData = JSON.parse(
+        localStorage.getItem("userData") ||
+          sessionStorage.getItem("userData") ||
+          "{}"
+      );
+
+      // Prepare payment data with all required fields
       const paymentData = {
-        amount: booking.amount || service.price,
+        amount: selectedTier
+          ? selectedTier.price
+          : booking.amount || service.price || service.basePrice,
         vendorId: booking.vendorId || service.vendor.id,
         bookingId: booking.id,
+        userId: userData.id, // Add the userId required by the backend
       };
 
       // Call payment initiation API
@@ -193,7 +244,10 @@ const BookingForm = () => {
       window.location.href = checkoutUrl;
     } catch (error) {
       console.error("Error initiating payment:", error);
-      toast.error("Failed to process payment. Redirecting to bookings page.");
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to process payment. Redirecting to bookings page."
+      );
 
       // Redirect to bookings page if payment initiation fails
       setTimeout(() => {
@@ -311,14 +365,6 @@ const BookingForm = () => {
                 >
                   {service.name}
                 </Typography>
-                <Chip
-                  label={formatCategory(service.category)}
-                  sx={{
-                    bgcolor: getCategoryColor(service.category),
-                    color: "white",
-                    fontWeight: "bold",
-                  }}
-                />
               </Box>
 
               <Box display="flex" alignItems="center" mb={1}>
@@ -338,12 +384,37 @@ const BookingForm = () => {
                 fontWeight="bold"
                 my={2}
               >
-                ETB {service.price?.toLocaleString()}
+                {selectedTier ? (
+                  <>
+                    ETB {selectedTier.price?.toLocaleString()}{" "}
+                    <span style={{ fontSize: "0.8em" }}>
+                      (
+                      {selectedTier.tier.charAt(0) +
+                        selectedTier.tier.slice(1).toLowerCase()}{" "}
+                      tier)
+                    </span>
+                  </>
+                ) : (
+                  <>ETB {service.price?.toLocaleString()}</>
+                )}
               </Typography>
 
               <Typography variant="body1" color="text.secondary" paragraph>
                 {service.description}
               </Typography>
+
+              {selectedTier && (
+                <Box mb={2}>
+                  <Typography variant="body2" color="text.secondary">
+                    Selected tier:{" "}
+                    <strong>
+                      {selectedTier.tier.charAt(0) +
+                        selectedTier.tier.slice(1).toLowerCase()}
+                    </strong>{" "}
+                    - {selectedTier.description}
+                  </Typography>
+                </Box>
+              )}
 
               <Divider sx={{ my: 2 }} />
 
