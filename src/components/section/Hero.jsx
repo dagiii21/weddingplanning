@@ -28,7 +28,6 @@ const Hero = () => {
     }
   };
 
-  // Function to generate an Ethiopian/Habesha pattern SVG
   const habeshaPatternSvg = `data:image/svg+xml;base64,${btoa(`
     <svg width="60" height="60" xmlns="http://www.w3.org/2000/svg">
       <!-- Habesha Pattern Base -->
